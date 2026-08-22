@@ -73,6 +73,8 @@ public struct OSLogBroadLogger: BroadLoggerProtocol {
             bootstrapStepMessage(for: event)
         case .cacheReadCompleted, .cacheOperationCompleted, .cacheOperationFailed:
             cacheMessage(for: event)
+        case .remoteFeatureFixtureEvaluated:
+            remoteFeatureFixtureMessage(for: event)
         default:
             bootstrapLifecycleMessage(for: event)
         }
@@ -137,6 +139,24 @@ public struct OSLogBroadLogger: BroadLoggerProtocol {
         default:
             event.name
         }
+    }
+
+    private func remoteFeatureFixtureMessage(for event: BroadLogEvent) -> String {
+        guard case let .remoteFeatureFixtureEvaluated(
+            scenario,
+            state,
+            requestedPlacement,
+            resolvedPlacement,
+            variation,
+            provenance
+        ) = event else {
+            return event.name
+        }
+        return "\(event.name) scenario=\(scenario) state=\(state) "
+            + "requested=\(requestedPlacement ?? "nil") "
+            + "resolved=\(resolvedPlacement ?? "nil") "
+            + "variation=\(variation ?? "nil") "
+            + "provenance=\(provenance ?? "nil")"
     }
 
     private func stepMessage(

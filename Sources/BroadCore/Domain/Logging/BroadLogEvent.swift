@@ -85,6 +85,14 @@ public enum BroadLogEvent: Equatable, Sendable {
     case cacheReadCompleted(BroadLogCacheReadResult)
     case cacheOperationCompleted(BroadLogCacheOperation)
     case cacheOperationFailed(operation: BroadLogCacheOperation, failure: BroadLogCacheFailure)
+    case remoteFeatureFixtureEvaluated(
+        scenario: String,
+        state: String,
+        requestedPlacement: String?,
+        resolvedPlacement: String?,
+        variation: String?,
+        provenance: String?
+    )
 
     public var category: BroadLogCategory {
         switch self {
@@ -105,6 +113,8 @@ public enum BroadLogEvent: Equatable, Sendable {
             .bootstrap
         case .cacheReadCompleted, .cacheOperationCompleted, .cacheOperationFailed:
             .cache
+        case .remoteFeatureFixtureEvaluated:
+            .experiments
         }
     }
 
@@ -128,6 +138,8 @@ public enum BroadLogEvent: Equatable, Sendable {
             .error
         case let .cacheReadCompleted(result):
             result.logLevel
+        case .remoteFeatureFixtureEvaluated:
+            .info
         }
     }
 
@@ -150,6 +162,7 @@ public enum BroadLogEvent: Equatable, Sendable {
         case .cacheReadCompleted: "cache.read.completed"
         case .cacheOperationCompleted: "cache.operation.completed"
         case .cacheOperationFailed: "cache.operation.failed"
+        case .remoteFeatureFixtureEvaluated: "remote-feature.fixture.evaluated"
         }
     }
 }
