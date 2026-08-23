@@ -9,6 +9,14 @@ public struct OSLogBroadLogger: BroadLoggerProtocol {
     private let purchaseLogger: Logger
     private let ruBillingLogger: Logger
     private let experimentsLogger: Logger
+    private let inputLogger: Logger
+    private let backendLogger: Logger
+    private let flowLogger: Logger
+    private let tokensLogger: Logger
+    private let analyticsLogger: Logger
+    private let uiLogger: Logger
+    private let blockedLogger: Logger
+    private let passLogger: Logger
 
     public init(subsystem: StaticString) {
         let subsystemValue = subsystem.description
@@ -22,11 +30,22 @@ public struct OSLogBroadLogger: BroadLoggerProtocol {
         purchaseLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.purchase.rawValue)
         ruBillingLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.ruBilling.rawValue)
         experimentsLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.experiments.rawValue)
+        inputLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.input.rawValue)
+        backendLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.backend.rawValue)
+        flowLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.flow.rawValue)
+        tokensLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.tokens.rawValue)
+        analyticsLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.analytics.rawValue)
+        uiLogger = Logger(
+            subsystem: subsystemValue,
+            category: BroadLogCategory.userInterface.rawValue
+        )
+        blockedLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.blocked.rawValue)
+        passLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.pass.rawValue)
     }
 
     public func log(_ event: BroadLogEvent) {
         let logger = logger(for: event.category)
-        let message = message(for: event)
+        let message = "[\(event.category.displayTag)] \(message(for: event))"
 
         switch event.level {
         case .debug:
@@ -39,8 +58,26 @@ public struct OSLogBroadLogger: BroadLoggerProtocol {
             logger.error("\(message, privacy: .public)")
         }
     }
+}
 
+private extension OSLogBroadLogger {
     private func logger(for category: BroadLogCategory) -> Logger {
+        switch category {
+        case .input,
+             .backend,
+             .flow,
+             .tokens,
+             .analytics,
+             .userInterface,
+             .blocked,
+             .pass:
+            developmentLogger(for: category)
+        default:
+            platformLogger(for: category)
+        }
+    }
+
+    private func platformLogger(for category: BroadLogCategory) -> Logger {
         switch category {
         case .bootstrap:
             bootstrapLogger
@@ -58,6 +95,31 @@ public struct OSLogBroadLogger: BroadLoggerProtocol {
             ruBillingLogger
         case .experiments:
             experimentsLogger
+        default:
+            developmentLogger(for: category)
+        }
+    }
+
+    private func developmentLogger(for category: BroadLogCategory) -> Logger {
+        switch category {
+        case .input:
+            inputLogger
+        case .backend:
+            backendLogger
+        case .flow:
+            flowLogger
+        case .tokens:
+            tokensLogger
+        case .analytics:
+            analyticsLogger
+        case .userInterface:
+            uiLogger
+        case .blocked:
+            blockedLogger
+        case .pass:
+            passLogger
+        default:
+            platformLogger(for: category)
         }
     }
 
@@ -73,10 +135,42 @@ public struct OSLogBroadLogger: BroadLoggerProtocol {
             bootstrapStepMessage(for: event)
         case .cacheReadCompleted, .cacheOperationCompleted, .cacheOperationFailed:
             cacheMessage(for: event)
-        case .remoteFeatureFixtureEvaluated:
+        case .remoteFeatureFixtureEvaluated, .remoteFeatureFixtureResolved:
             remoteFeatureFixtureMessage(for: event)
+        case .projectInputsRead,
+             .backendMappingProgress,
+             .flowAdvanced,
+             .tokenBalanceConfirmed,
+             .analyticsEventsRecorded,
+             .uiVisualReviewRemaining,
+             .workBlocked,
+             .verificationPassed:
+            developmentStatusMessage(for: event)
         default:
             bootstrapLifecycleMessage(for: event)
+        }
+    }
+
+    private func developmentStatusMessage(for event: BroadLogEvent) -> String {
+        switch event {
+        case let .projectInputsRead(kaiten, design, reference, backend):
+            "\(event.name) kaiten=\(kaiten) design=\(design) reference=\(reference) backend=\(backend)"
+        case let .backendMappingProgress(mapped, total):
+            "\(event.name) mapped=\(max(0, mapped)) total=\(max(0, total))"
+        case let .flowAdvanced(source, destination):
+            "\(event.name) from=\(source.rawValue) to=\(destination.rawValue)"
+        case .tokenBalanceConfirmed:
+            event.name
+        case let .analyticsEventsRecorded(count):
+            "\(event.name) count=\(max(0, count))"
+        case let .uiVisualReviewRemaining(count):
+            "\(event.name) count=\(max(0, count))"
+        case let .workBlocked(capability, reason):
+            "\(event.name) capability=\(capability.rawValue) reason=\(reason.rawValue)"
+        case let .verificationPassed(scope):
+            "\(event.name) scope=\(scope.rawValue)"
+        default:
+            event.name
         }
     }
 
@@ -142,21 +236,21 @@ public struct OSLogBroadLogger: BroadLoggerProtocol {
     }
 
     private func remoteFeatureFixtureMessage(for event: BroadLogEvent) -> String {
-        guard case let .remoteFeatureFixtureEvaluated(
+        guard case let .remoteFeatureFixtureResolved(
             scenario,
-            state,
+            resolution,
             requestedPlacement,
             resolvedPlacement,
-            variation,
+            hasVariation,
             provenance
         ) = event else {
-            return event.name
+            return "\(event.name) legacy_metadata=discarded"
         }
-        return "\(event.name) scenario=\(scenario) state=\(state) "
-            + "requested=\(requestedPlacement ?? "nil") "
-            + "resolved=\(resolvedPlacement ?? "nil") "
-            + "variation=\(variation ?? "nil") "
-            + "provenance=\(provenance ?? "nil")"
+        return "\(event.name) scenario=\(scenario.rawValue) resolution=\(resolution.rawValue) "
+            + "requested=\(requestedPlacement?.rawValue ?? "nil") "
+            + "resolved=\(resolvedPlacement?.rawValue ?? "nil") "
+            + "has_variation=\(hasVariation) "
+            + "provenance=\(provenance?.rawValue ?? "nil")"
     }
 
     private func stepMessage(

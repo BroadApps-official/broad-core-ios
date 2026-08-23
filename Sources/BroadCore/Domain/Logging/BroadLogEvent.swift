@@ -14,6 +14,76 @@ public enum BroadLogCategory: String, CaseIterable, Equatable, Sendable {
     case purchase
     case ruBilling
     case experiments
+    case input
+    case backend
+    case flow
+    case tokens
+    case analytics
+    case userInterface = "ui"
+    case blocked
+    case pass
+}
+
+public enum BroadLogFlowStage: String, Equatable, Sendable {
+    case launch
+    case onboarding
+    case initialPaywall = "initial-paywall"
+    case specialOffer = "special-offer"
+    case tokenPaywall = "token-paywall"
+    case main
+}
+
+public enum BroadLogBackendCapability: String, Equatable, Sendable {
+    case account
+    case content
+    case history
+    case monetization
+    case tokenBalance = "token-balance"
+    case tokenFulfillment = "token-fulfillment"
+}
+
+public enum BroadLogBlocker: String, Equatable, Sendable {
+    case sourceUnavailable = "source-unavailable"
+    case backendContractMissing = "backend-contract-missing"
+    case designMismatch = "design-mismatch"
+    case buildFailed = "build-failed"
+}
+
+public enum BroadLogVerificationScope: String, Equatable, Sendable {
+    case functional
+    case visual
+    case full
+}
+
+public enum BroadLogRemoteFeatureFixtureScenario: String, Equatable, Sendable {
+    case specialOfferEnabled = "special-offer-enabled"
+    case specialOfferDisabled = "special-offer-disabled"
+    case specialOfferPlatformCache = "special-offer-platform-cache"
+    case specialOfferMainFallback = "special-offer-main-fallback"
+    case specialOfferTimed = "special-offer-timed"
+    case ruPayProviderEnabled = "ru-pay-provider-enabled"
+    case ruPayPlatformCache = "ru-pay-platform-cache"
+}
+
+public enum BroadLogRemoteFeatureResolution: String, Equatable, Sendable {
+    case presented
+    case unavailable
+    case expired
+    case cooldown
+}
+
+public enum BroadLogPlacement: String, Equatable, Sendable {
+    case main
+    case specialOffer = "special-offer"
+    case tokens
+    case other
+}
+
+public enum BroadLogRemoteConfigurationProvenance: String, Equatable, Sendable {
+    case verifiedFreshRemote = "verified-fresh-remote"
+    case providerCacheFallbackPossible = "provider-cache-fallback-possible"
+    case platformCache = "platform-cache"
+    case legacyUnqualified = "legacy-unqualified"
 }
 
 public enum BroadLogBootstrapState: String, Equatable, Sendable {
@@ -93,6 +163,22 @@ public enum BroadLogEvent: Equatable, Sendable {
         variation: String?,
         provenance: String?
     )
+    case remoteFeatureFixtureResolved(
+        scenario: BroadLogRemoteFeatureFixtureScenario,
+        resolution: BroadLogRemoteFeatureResolution,
+        requestedPlacement: BroadLogPlacement?,
+        resolvedPlacement: BroadLogPlacement?,
+        hasVariation: Bool,
+        provenance: BroadLogRemoteConfigurationProvenance?
+    )
+    case projectInputsRead(kaiten: Bool, design: Bool, reference: Bool, backend: Bool)
+    case backendMappingProgress(mapped: Int, total: Int)
+    case flowAdvanced(source: BroadLogFlowStage, destination: BroadLogFlowStage)
+    case tokenBalanceConfirmed
+    case analyticsEventsRecorded(count: Int)
+    case uiVisualReviewRemaining(count: Int)
+    case workBlocked(capability: BroadLogBackendCapability, reason: BroadLogBlocker)
+    case verificationPassed(BroadLogVerificationScope)
 
     public var category: BroadLogCategory {
         switch self {
@@ -113,8 +199,24 @@ public enum BroadLogEvent: Equatable, Sendable {
             .bootstrap
         case .cacheReadCompleted, .cacheOperationCompleted, .cacheOperationFailed:
             .cache
-        case .remoteFeatureFixtureEvaluated:
+        case .remoteFeatureFixtureEvaluated, .remoteFeatureFixtureResolved:
             .experiments
+        case .projectInputsRead:
+            .input
+        case .backendMappingProgress:
+            .backend
+        case .flowAdvanced:
+            .flow
+        case .tokenBalanceConfirmed:
+            .tokens
+        case .analyticsEventsRecorded:
+            .analytics
+        case .uiVisualReviewRemaining:
+            .userInterface
+        case .workBlocked:
+            .blocked
+        case .verificationPassed:
+            .pass
         }
     }
 
@@ -138,8 +240,19 @@ public enum BroadLogEvent: Equatable, Sendable {
             .error
         case let .cacheReadCompleted(result):
             result.logLevel
-        case .remoteFeatureFixtureEvaluated:
+        case .remoteFeatureFixtureEvaluated, .remoteFeatureFixtureResolved:
             .info
+        case .projectInputsRead,
+             .backendMappingProgress,
+             .flowAdvanced,
+             .tokenBalanceConfirmed,
+             .analyticsEventsRecorded,
+             .verificationPassed:
+            .info
+        case .uiVisualReviewRemaining:
+            .warning
+        case .workBlocked:
+            .error
         }
     }
 
@@ -163,6 +276,38 @@ public enum BroadLogEvent: Equatable, Sendable {
         case .cacheOperationCompleted: "cache.operation.completed"
         case .cacheOperationFailed: "cache.operation.failed"
         case .remoteFeatureFixtureEvaluated: "remote-feature.fixture.evaluated"
+        case .remoteFeatureFixtureResolved: "remote-feature.fixture.resolved"
+        case .projectInputsRead: "inputs.read"
+        case .backendMappingProgress: "backend.mapping.progress"
+        case .flowAdvanced: "flow.advanced"
+        case .tokenBalanceConfirmed: "tokens.balance.confirmed"
+        case .analyticsEventsRecorded: "analytics.events.recorded"
+        case .uiVisualReviewRemaining: "ui.visual-review.remaining"
+        case .workBlocked: "work.blocked"
+        case .verificationPassed: "verification.passed"
+        }
+    }
+}
+
+extension BroadLogCategory {
+    var displayTag: String {
+        switch self {
+        case .bootstrap: "BOOTSTRAP"
+        case .cache: "CACHE"
+        case .networking: "NETWORKING"
+        case .monetization: "MONETIZATION"
+        case .paywall: "PAYWALL"
+        case .purchase: "PURCHASE"
+        case .ruBilling: "RU_BILLING"
+        case .experiments: "EXPERIMENTS"
+        case .input: "INPUT"
+        case .backend: "BACKEND"
+        case .flow: "FLOW"
+        case .tokens: "TOKENS"
+        case .analytics: "ANALYTICS"
+        case .userInterface: "UI"
+        case .blocked: "BLOCKED"
+        case .pass: "PASS"
         }
     }
 }
