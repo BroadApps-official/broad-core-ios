@@ -1,0 +1,41 @@
+name: BroadCoreSandbox
+
+options:
+  minimumXcodeGenVersion: 2.45.4
+  deploymentTarget:
+    iOS: "17.0"
+
+packages:
+  BroadCore:
+    path: ../..
+
+settings:
+  base:
+    SWIFT_VERSION: 5.0
+    TARGETED_DEVICE_FAMILY: 1
+    CODE_SIGNING_ALLOWED: NO
+    DEVELOPMENT_TEAM: ""
+
+targets:
+  BroadCoreSandbox:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+    dependencies:
+      - package: BroadCore
+        product: BroadCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.broadapps.core.sandbox
+        PRODUCT_NAME: BroadCoreSandbox
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Core Sandbox
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIRequiresFullScreen: YES
+        SUPPORTS_MACCATALYST: NO
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
+    scheme:
+      gatherCoverageData: false

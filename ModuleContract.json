@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "module": "BroadCore",
+  "product": "BroadCore",
+  "sandbox": "BroadCoreSandbox",
+  "minimumIOS": "17.0",
+  "swiftTools": "6.0",
+  "allowedBroadImports": [],
+  "requiresPrivacyManifest": true,
+  "realPaymentsExecuted": false
+}
