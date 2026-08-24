@@ -62,6 +62,8 @@ public enum BroadLogRemoteFeatureFixtureScenario: String, Equatable, Sendable {
     case specialOfferMainFallback = "special-offer-main-fallback"
     case specialOfferTimed = "special-offer-timed"
     case ruPayProviderEnabled = "ru-pay-provider-enabled"
+    case ruPayProviderDisabled = "ru-pay-provider-disabled"
+    case ruPayAdaptyFallbackEnabled = "ru-pay-adapty-fallback-enabled"
     case ruPayPlatformCache = "ru-pay-platform-cache"
 }
 
@@ -84,6 +86,22 @@ public enum BroadLogRemoteConfigurationProvenance: String, Equatable, Sendable {
     case providerCacheFallbackPossible = "provider-cache-fallback-possible"
     case platformCache = "platform-cache"
     case legacyUnqualified = "legacy-unqualified"
+}
+
+public enum BroadLogRUBillingAvailabilityReason: String, Equatable, Sendable {
+    case available
+    case productNotEligible = "product-not-eligible"
+    case hostDisabled = "host-disabled"
+    case debugForcedEnabled = "debug-forced-enabled"
+    case debugForcedDisabled = "debug-forced-disabled"
+    case remoteFlagAbsent = "remote-flag-absent"
+    case remoteFlagDisabled = "remote-flag-disabled"
+    case remoteFlagInvalid = "remote-flag-invalid"
+    case unqualifiedRemoteConfiguration = "unqualified-remote-configuration"
+    case deviceContextNotRussian = "device-context-not-russian"
+    case catalogUnavailable = "catalog-unavailable"
+    case productNotMatched = "product-not-matched"
+    case methodsUnavailable = "methods-unavailable"
 }
 
 public enum BroadLogBootstrapState: String, Equatable, Sendable {
@@ -171,6 +189,10 @@ public enum BroadLogEvent: Equatable, Sendable {
         hasVariation: Bool,
         provenance: BroadLogRemoteConfigurationProvenance?
     )
+    case ruBillingAvailabilityEvaluated(
+        reason: BroadLogRUBillingAvailabilityReason,
+        methodCount: Int
+    )
     case projectInputsRead(kaiten: Bool, design: Bool, reference: Bool, backend: Bool)
     case backendMappingProgress(mapped: Int, total: Int)
     case flowAdvanced(source: BroadLogFlowStage, destination: BroadLogFlowStage)
@@ -201,6 +223,8 @@ public enum BroadLogEvent: Equatable, Sendable {
             .cache
         case .remoteFeatureFixtureEvaluated, .remoteFeatureFixtureResolved:
             .experiments
+        case .ruBillingAvailabilityEvaluated:
+            .ruBilling
         case .projectInputsRead:
             .input
         case .backendMappingProgress:
@@ -242,6 +266,8 @@ public enum BroadLogEvent: Equatable, Sendable {
             result.logLevel
         case .remoteFeatureFixtureEvaluated, .remoteFeatureFixtureResolved:
             .info
+        case let .ruBillingAvailabilityEvaluated(reason, _):
+            reason.logLevel
         case .projectInputsRead,
              .backendMappingProgress,
              .flowAdvanced,
@@ -277,6 +303,7 @@ public enum BroadLogEvent: Equatable, Sendable {
         case .cacheOperationFailed: "cache.operation.failed"
         case .remoteFeatureFixtureEvaluated: "remote-feature.fixture.evaluated"
         case .remoteFeatureFixtureResolved: "remote-feature.fixture.resolved"
+        case .ruBillingAvailabilityEvaluated: "ru-billing.availability.evaluated"
         case .projectInputsRead: "inputs.read"
         case .backendMappingProgress: "backend.mapping.progress"
         case .flowAdvanced: "flow.advanced"
@@ -336,6 +363,26 @@ private extension BroadLogCacheReadResult {
             .info
         case .stale, .corrupted, .schemaMismatch, .versionMismatch:
             .warning
+        }
+    }
+}
+
+private extension BroadLogRUBillingAvailabilityReason {
+    var logLevel: BroadLogLevel {
+        switch self {
+        case .available, .debugForcedEnabled:
+            .info
+        case .remoteFlagInvalid, .catalogUnavailable, .productNotMatched:
+            .warning
+        case .productNotEligible,
+             .hostDisabled,
+             .debugForcedDisabled,
+             .remoteFlagAbsent,
+             .remoteFlagDisabled,
+             .unqualifiedRemoteConfiguration,
+             .deviceContextNotRussian,
+             .methodsUnavailable:
+            .debug
         }
     }
 }
