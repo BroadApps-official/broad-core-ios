@@ -60,10 +60,10 @@ public enum BroadLogRemoteFeatureFixtureScenario: String, Equatable, Sendable {
     case specialOfferDisabled = "special-offer-disabled"
     case specialOfferPlatformCache = "special-offer-platform-cache"
     case specialOfferMainFallback = "special-offer-main-fallback"
-    case specialOfferTimed = "special-offer-timed"
+    case specialOfferLoopingTimer = "special-offer-looping-timer"
     case ruPayProviderEnabled = "ru-pay-provider-enabled"
     case ruPayProviderDisabled = "ru-pay-provider-disabled"
-    case ruPayAdaptyFallbackEnabled = "ru-pay-adapty-fallback-enabled"
+    case ruPayAdaptyFallbackRejected = "ru-pay-adapty-fallback-rejected"
     case ruPayPlatformCache = "ru-pay-platform-cache"
 }
 
