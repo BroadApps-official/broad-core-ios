@@ -6,6 +6,8 @@
 
 ### Changed
 
+- верх README теперь ведёт в актуальную cross-module карту создания
+  приложения, не дублируя её внутри foundation-модуля;
 - README получил визуальную карту bootstrap/cache, быстрый маршрут и точные
   границы critical/background работы, ATT и async feedback;
 - восстановлены актуальные схемы из последней полной platform-инструкции без
