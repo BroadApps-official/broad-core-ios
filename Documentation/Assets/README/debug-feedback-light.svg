@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="650" viewBox="0 0 1440 650" role="img" aria-labelledby="title desc">
+  <title id="title">Debug Keychain и мгновенный отклик backend-кнопок</title>
+  <desc id="desc">Слева показана безопасная очистка app-owned Keychain в Debug, справа — мгновенный spinner до ответа backend.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7fbff"/>
+      <stop offset="1" stop-color="#f7f3ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#64748b" flood-opacity=".16"/>
+    </filter>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#71809d"/>
+    </marker>
+  </defs>
+
+  <rect width="1440" height="650" rx="34" fill="url(#background)"/>
+  <text x="64" y="70" fill="#152033" font-family="Arial, sans-serif" font-size="34" font-weight="700">Разработка без «зависших» кнопок и старой сессии</text>
+  <text x="64" y="108" fill="#53627b" font-family="Arial, sans-serif" font-size="19">Два готовых правила: точечная очистка Keychain и мгновенный spinner до ответа backend.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="64" y="150" width="624" height="340" rx="26" fill="#eef5ff" stroke="#3b82f6" stroke-width="2"/>
+    <rect x="752" y="150" width="624" height="340" rx="26" fill="#f5efff" stroke="#8b5cf6" stroke-width="2"/>
+  </g>
+
+  <text x="92" y="190" fill="#236fd4" font-family="Arial, sans-serif" font-size="22" font-weight="700">DEBUG · ОЧИСТИТЬ KEYCHAIN</text>
+  <text x="92" y="220" fill="#53627b" font-family="Arial, sans-serif" font-size="16">Только точные service приложения. В Release функции нет.</text>
+
+  <g font-family="Arial, sans-serif">
+    <rect x="92" y="252" width="116" height="108" rx="18" fill="#ffffff" stroke="#3b82f6"/>
+    <text x="150" y="286" text-anchor="middle" fill="#236fd4" font-size="14" font-weight="700">1 · SETTINGS</text>
+    <text x="150" y="318" text-anchor="middle" fill="#152033" font-size="17" font-weight="700">Нажать</text>
+    <text x="150" y="342" text-anchor="middle" fill="#53627b" font-size="14">«Очистить»</text>
+
+    <rect x="236" y="252" width="116" height="108" rx="18" fill="#ffffff" stroke="#3b82f6"/>
+    <text x="294" y="286" text-anchor="middle" fill="#236fd4" font-size="14" font-weight="700">2 · CONFIRM</text>
+    <text x="294" y="318" text-anchor="middle" fill="#152033" font-size="17" font-weight="700">Подтвердить</text>
+    <text x="294" y="342" text-anchor="middle" fill="#53627b" font-size="14">удаление</text>
+
+    <rect x="380" y="252" width="116" height="108" rx="18" fill="#ffffff" stroke="#3b82f6"/>
+    <text x="438" y="286" text-anchor="middle" fill="#236fd4" font-size="14" font-weight="700">3 · SCOPE</text>
+    <text x="438" y="318" text-anchor="middle" fill="#152033" font-size="17" font-weight="700">Точный</text>
+    <text x="438" y="342" text-anchor="middle" fill="#53627b" font-size="14">service</text>
+
+    <rect x="524" y="252" width="116" height="108" rx="18" fill="#eafbf5" stroke="#10b981"/>
+    <text x="582" y="286" text-anchor="middle" fill="#078765" font-size="14" font-weight="700">4 · READY</text>
+    <text x="582" y="318" text-anchor="middle" fill="#152033" font-size="17" font-weight="700">Перезапуск</text>
+    <text x="582" y="342" text-anchor="middle" fill="#53627b" font-size="14">и новый login</text>
+
+    <line x1="208" y1="306" x2="228" y2="306" stroke="#71809d" stroke-width="3" marker-end="url(#arrow)"/>
+    <line x1="352" y1="306" x2="372" y2="306" stroke="#71809d" stroke-width="3" marker-end="url(#arrow)"/>
+    <line x1="496" y1="306" x2="516" y2="306" stroke="#71809d" stroke-width="3" marker-end="url(#arrow)"/>
+  </g>
+
+  <text x="92" y="410" fill="#152033" font-family="Arial, sans-serif" font-size="18" font-weight="700">Не удаляет:</text>
+  <text x="210" y="410" fill="#53627b" font-family="Arial, sans-serif" font-size="17">чужие записи · кеш · файлы · payment pending</text>
+  <text x="92" y="446" fill="#078765" font-family="Arial, sans-serif" font-size="17">✓ удобно проверять logout, fresh install и смену тестового аккаунта</text>
+
+  <text x="780" y="190" fill="#7048d1" font-family="Arial, sans-serif" font-size="22" font-weight="700">BACKEND · ОТКЛИК СРАЗУ ПОСЛЕ ТАПА</text>
+  <text x="780" y="220" fill="#53627b" font-family="Arial, sans-serif" font-size="16">Сначала меняем UI-state, затем ждём use case.</text>
+
+  <g font-family="Arial, sans-serif">
+    <rect x="780" y="252" width="116" height="108" rx="18" fill="#ffffff" stroke="#8b5cf6"/>
+    <text x="838" y="286" text-anchor="middle" fill="#7048d1" font-size="14" font-weight="700">1 · TAP</text>
+    <text x="838" y="318" text-anchor="middle" fill="#152033" font-size="17" font-weight="700">Команда</text>
+    <text x="838" y="342" text-anchor="middle" fill="#53627b" font-size="14">принята</text>
+
+    <rect x="924" y="252" width="116" height="108" rx="18" fill="#ffffff" stroke="#8b5cf6"/>
+    <text x="982" y="286" text-anchor="middle" fill="#7048d1" font-size="14" font-weight="700">2 · UI STATE</text>
+    <text x="982" y="318" text-anchor="middle" fill="#152033" font-size="17" font-weight="700">Spinner</text>
+    <text x="982" y="342" text-anchor="middle" fill="#53627b" font-size="14">+ блокировка</text>
+
+    <rect x="1068" y="252" width="116" height="108" rx="18" fill="#ffffff" stroke="#8b5cf6"/>
+    <text x="1126" y="286" text-anchor="middle" fill="#7048d1" font-size="14" font-weight="700">3 · AWAIT</text>
+    <text x="1126" y="318" text-anchor="middle" fill="#152033" font-size="17" font-weight="700">Use case</text>
+    <text x="1126" y="342" text-anchor="middle" fill="#53627b" font-size="14">timeout / result</text>
+
+    <rect x="1212" y="252" width="116" height="108" rx="18" fill="#eafbf5" stroke="#10b981"/>
+    <text x="1270" y="286" text-anchor="middle" fill="#078765" font-size="14" font-weight="700">4 · RESULT</text>
+    <text x="1270" y="318" text-anchor="middle" fill="#152033" font-size="17" font-weight="700">Экран</text>
+    <text x="1270" y="342" text-anchor="middle" fill="#53627b" font-size="14">или Retry</text>
+
+    <line x1="896" y1="306" x2="916" y2="306" stroke="#71809d" stroke-width="3" marker-end="url(#arrow)"/>
+    <line x1="1040" y1="306" x2="1060" y2="306" stroke="#71809d" stroke-width="3" marker-end="url(#arrow)"/>
+    <line x1="1184" y1="306" x2="1204" y2="306" stroke="#71809d" stroke-width="3" marker-end="url(#arrow)"/>
+  </g>
+
+  <text x="780" y="410" fill="#152033" font-family="Arial, sans-serif" font-size="18" font-weight="700">Главное:</text>
+  <text x="884" y="410" fill="#53627b" font-family="Arial, sans-serif" font-size="17">isInFlight = true ставится до Task и await</text>
+  <text x="780" y="446" fill="#078765" font-family="Arial, sans-serif" font-size="17">✓ пользователь сразу видит работу · второй запрос не стартует</text>
+
+  <rect x="64" y="530" width="1312" height="76" rx="20" fill="#fff0f3" stroke="#f43f5e" stroke-width="2"/>
+  <text x="92" y="577" fill="#d92d52" font-family="Arial, sans-serif" font-size="18" font-weight="700">НЕ ДЕЛАЕМ:</text>
+  <text x="236" y="577" fill="#152033" font-family="Arial, sans-serif" font-size="18">глобальную очистку Keychain · loader после await · повторный запрос по второму тапу</text>
+  <text x="1120" y="630" fill="#7b89a2" font-family="Arial, sans-serif" font-size="15">BroadApps iOS Platform</text>
+</svg>

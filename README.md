@@ -1,5 +1,20 @@
 # BroadCore
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="Documentation/Assets/README/hero-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="Documentation/Assets/README/hero-light.svg">
+    <img alt="BroadApps iOS Platform" src="Documentation/Assets/README/hero-light.svg" width="100%">
+  </picture>
+</p>
+
+<p align="center">
+  <img alt="iOS 17+" src="https://img.shields.io/badge/iOS-17%2B-111827?logo=apple&amp;logoColor=white">
+  <img alt="Swift 5" src="https://img.shields.io/badge/Swift-language%20mode%205-F05138?logo=swift&amp;logoColor=white">
+  <img alt="SPM ready" src="https://img.shields.io/badge/SPM-ready-3B82F6">
+  <img alt="Release 1.0.0" src="https://img.shields.io/badge/release-1.0.0-10B981">
+</p>
+
 Foundation‑модуль BroadApps для bootstrap, cache, typed states/errors, logging,
 retry/timeout, networking classification, persistence boundary и ATT adapter.
 
@@ -7,6 +22,10 @@ retry/timeout, networking classification, persistence boundary и ATT adapter.
 [Changelog](CHANGELOG.md) ·
 [Публичный API](Documentation/PublicAPI.md) ·
 [Как предложить правку](CONTRIBUTING.md)
+
+**Быстрый маршрут:** [установка](#installation) · [bootstrap](#minimal-bootstrap) ·
+[cache](#cache-contract) · [runtime-карта](#runtime-карта) ·
+[ATT](#att-boundary) · [проверка](#проверка)
 
 ## Что делает модуль
 
@@ -16,6 +35,43 @@ retry/timeout, networking classification, persistence boundary и ATT adapter.
 - пишет typed privacy-safe events через `BroadLoggerProtocol`;
 - изолирует `UserDefaults` и ATT в infrastructure adapters;
 - регистрирует foundation dependencies через `BroadCoreAssembly`.
+
+## Runtime-карта
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="Documentation/Assets/README/startup-cache-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="Documentation/Assets/README/startup-cache-light.svg">
+  <img alt="Critical и background bootstrap, cache и offline fallback" src="Documentation/Assets/README/startup-cache-light.svg" width="100%">
+</picture>
+
+Core отвечает за **механику**, а не за продуктовые решения приложения:
+
+| Сценарий | Контракт BroadCore | Решение host app |
+|---|---|---|
+| Первый запуск | bounded critical steps, затем background work | какие сервисы действительно critical |
+| Контент | `fresh`, `stale` или `missing(reason)` | можно ли показывать stale для этого экрана |
+| Ошибка сети | typed classification и retryability | текст, экран и момент Retry |
+| Логи | typed allow-list без raw payload | subsystem и destinations |
+| ATT | system adapter и use case | вызвать только после видимого первого onboarding-слайда |
+
+Нельзя помещать в bootstrap ATT, Rate Us, Usedesk, purchase/restore, RU checkout
+или бесконечное ожидание внешнего SDK. Background failure может дать
+`degraded`, но не должен навсегда удерживать первый экран.
+
+## Мгновенный отклик async-действий
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="Documentation/Assets/README/debug-feedback-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="Documentation/Assets/README/debug-feedback-light.svg">
+  <img alt="Spinner появляется синхронно до Task и первого await" src="Documentation/Assets/README/debug-feedback-light.svg" width="100%">
+</picture>
+
+Кнопка, запускающая backend или SDK use case, синхронно устанавливает
+`isInFlight` **до** создания `Task` и первого `await`. Повторный tap блокируется,
+а timeout/offline завершаются typed-состоянием, а не ложным success.
+
+UI этого loader остаётся app-owned или принадлежит `BroadUIFlows`; Core даёт
+состояния, timeout/retry и безопасную классификацию ошибки.
 
 ## Что модуль принципиально не делает
 

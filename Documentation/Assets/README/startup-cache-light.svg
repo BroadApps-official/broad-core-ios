@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="760" viewBox="0 0 1440 760" role="img" aria-labelledby="title desc">
+  <title id="title">Запуск, SDK и кеш BroadApps iOS Platform</title>
+  <desc id="desc">Схема показывает синхронную сборку зависимостей, критические шаги, открытие UI, фоновые SDK и offline fallback из кеша.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fbff"/>
+      <stop offset="1" stop-color="#f7f1ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#52617a" flood-opacity=".16"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#667892"/>
+    </marker>
+  </defs>
+
+  <rect width="1440" height="760" rx="34" fill="url(#background)"/>
+  <text x="64" y="70" fill="#172033" font-family="Arial, sans-serif" font-size="34" font-weight="700">Запускаем только нужное — контент не теряем</text>
+  <text x="64" y="108" fill="#596983" font-family="Arial, sans-serif" font-size="20">Первый экран не ждёт аналитику, чат и другие необязательные сервисы.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="64" y="150" width="292" height="142" rx="24" fill="#edf5ff" stroke="#3b82f6" stroke-width="2"/>
+    <text x="88" y="188" fill="#246fd0" font-family="Arial, sans-serif" font-size="17" font-weight="700">1  COMPOSITION ROOT</text>
+    <text x="88" y="226" fill="#172033" font-family="Arial, sans-serif" font-size="24" font-weight="700">Собрать объекты</text>
+    <text x="88" y="258" fill="#596983" font-family="Arial, sans-serif" font-size="17">конфиг · logger · cache · adapters</text>
+
+    <rect x="410" y="150" width="292" height="142" rx="24" fill="#fff0f7" stroke="#ec4899" stroke-width="2"/>
+    <text x="434" y="188" fill="#c52f78" font-family="Arial, sans-serif" font-size="17" font-weight="700">2  CRITICAL</text>
+    <text x="434" y="226" fill="#172033" font-family="Arial, sans-serif" font-size="24" font-weight="700">По очереди</text>
+    <text x="434" y="254" fill="#596983" font-family="Arial, sans-serif" font-size="16">без этого нельзя выбрать</text>
+    <text x="434" y="276" fill="#596983" font-family="Arial, sans-serif" font-size="16">первый экран</text>
+
+    <rect x="756" y="150" width="292" height="142" rx="24" fill="#eafbf5" stroke="#10b981" stroke-width="3"/>
+    <text x="780" y="188" fill="#0a8d66" font-family="Arial, sans-serif" font-size="17" font-weight="700">3  UI READY</text>
+    <text x="780" y="226" fill="#172033" font-family="Arial, sans-serif" font-size="24" font-weight="700">ready / degraded</text>
+    <text x="780" y="258" fill="#596983" font-family="Arial, sans-serif" font-size="17">открыть безопасный экран</text>
+
+    <rect x="1102" y="150" width="274" height="142" rx="24" fill="#eef2f8" stroke="#64748b" stroke-width="2"/>
+    <text x="1126" y="188" fill="#55657b" font-family="Arial, sans-serif" font-size="17" font-weight="700">4  BACKGROUND</text>
+    <text x="1126" y="226" fill="#172033" font-family="Arial, sans-serif" font-size="24" font-weight="700">Параллельно</text>
+    <text x="1126" y="258" fill="#596983" font-family="Arial, sans-serif" font-size="17">аналитика · telemetry · prewarm</text>
+  </g>
+
+  <line x1="356" y1="221" x2="400" y2="221" stroke="#667892" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="702" y1="221" x2="746" y2="221" stroke="#667892" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="1048" y1="221" x2="1092" y2="221" stroke="#667892" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <text x="64" y="355" fill="#172033" font-family="Arial, sans-serif" font-size="27" font-weight="700">Когда экрану нужен контент</text>
+
+  <g filter="url(#shadow)">
+    <rect x="64" y="390" width="250" height="120" rx="22" fill="#edf5ff" stroke="#3b82f6" stroke-width="2"/>
+    <text x="88" y="428" fill="#246fd0" font-family="Arial, sans-serif" font-size="17" font-weight="700">ЛОКАЛЬНО</text>
+    <text x="88" y="462" fill="#172033" font-family="Arial, sans-serif" font-size="22" font-weight="700">fresh / stale cache</text>
+    <text x="88" y="490" fill="#596983" font-family="Arial, sans-serif" font-size="16">маленький typed snapshot</text>
+
+    <rect x="396" y="390" width="250" height="120" rx="22" fill="#f5efff" stroke="#8b5cf6" stroke-width="2"/>
+    <text x="420" y="428" fill="#7650c8" font-family="Arial, sans-serif" font-size="17" font-weight="700">СЕТЬ</text>
+    <text x="420" y="462" fill="#172033" font-family="Arial, sans-serif" font-size="22" font-weight="700">Запрос + timeout</text>
+    <text x="420" y="490" fill="#596983" font-family="Arial, sans-serif" font-size="16">только валидный ответ</text>
+
+    <rect x="728" y="390" width="300" height="120" rx="22" fill="#eafbf5" stroke="#10b981" stroke-width="2"/>
+    <text x="752" y="428" fill="#0a8d66" font-family="Arial, sans-serif" font-size="17" font-weight="700">СЕТЬ ОТВЕТИЛА</text>
+    <text x="752" y="462" fill="#172033" font-family="Arial, sans-serif" font-size="22" font-weight="700">Показать и сохранить</text>
+    <text x="752" y="490" fill="#596983" font-family="Arial, sans-serif" font-size="16">новый envelope с version и TTL</text>
+
+    <rect x="1110" y="360" width="266" height="180" rx="22" fill="#fff1f3" stroke="#f43f5e" stroke-width="2"/>
+    <text x="1134" y="398" fill="#cf304b" font-family="Arial, sans-serif" font-size="17" font-weight="700">СЕТЬ ПРОПАЛА</text>
+    <text x="1134" y="434" fill="#172033" font-family="Arial, sans-serif" font-size="20" font-weight="700">cache есть → stale UI</text>
+    <text x="1134" y="466" fill="#596983" font-family="Arial, sans-serif" font-size="16">banner + «Повторить»</text>
+    <text x="1134" y="500" fill="#172033" font-family="Arial, sans-serif" font-size="20" font-weight="700">cache нет → error</text>
+    <text x="1134" y="526" fill="#596983" font-family="Arial, sans-serif" font-size="16">без ложного success</text>
+  </g>
+
+  <line x1="314" y1="450" x2="386" y2="450" stroke="#667892" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="646" y1="430" x2="718" y2="430" stroke="#10b981" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M646 476 C820 566 976 566 1100 476" fill="none" stroke="#f43f5e" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <rect x="64" y="600" width="1312" height="104" rx="22" fill="#fff0f6" stroke="#ec4899" stroke-width="2"/>
+  <text x="92" y="638" fill="#c52f78" font-family="Arial, sans-serif" font-size="18" font-weight="700">НЕ ЗАПУСКАЕМ В LOADER</text>
+  <text x="92" y="678" fill="#172033" font-family="Arial, sans-serif" font-size="21">Запрос ATT  ·  Rate Us  ·  открытие Usedesk  ·  purchase / restore  ·  бесконечное ожидание</text>
+  <text x="1035" y="730" fill="#8793a8" font-family="Arial, sans-serif" font-size="15">BroadApps iOS Platform</text>
+</svg>
