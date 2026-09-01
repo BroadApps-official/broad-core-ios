@@ -197,6 +197,7 @@
 | Initializer | `init(from decoder: any Decoder) throws` |
 | Initializer | `init(id: BootstrapStepID, name: String, criticality: BootstrapCriticality, timeoutPolicy: TimeoutPolicy, retryPolicy: RetryPolicy, operation: @escaping BootstrapStep.Operation)` |
 | Initializer | `init(identifier: String = "BroadCore")` |
+| Initializer | `init(key: String, launchArgument: String? = nil, defaultValue: Bool = false)` |
 | Initializer | `init(keyValueStore: any KeyValueStoreProtocol, clock: CacheClock = .system, maximumEncodedSize: Int = VersionedJSONCacheRepository.defaultMaximumEncodedSize, logger: any BroadLoggerProtocol = NoOpBroadLogger())` |
 | Initializer | `init(kind: AppError.Kind, userMessage: String, diagnosticCode: String, isRetryable: Bool)` |
 | Initializer | `init(limit: Duration)` |
@@ -205,6 +206,7 @@
 | Initializer | `init(rawValue: String)` |
 | Initializer | `init(repository: any TrackingAuthorizationRepositoryProtocol)` |
 | Initializer | `init(steps: [BootstrapStep], errorMessages: BootstrapErrorMessages = .englishDefault, logger: any BroadLoggerProtocol = NoOpBroadLogger())` |
+| Initializer | `init(store: any KeyValueStoreProtocol, arguments: [String] = ProcessInfo.processInfo.arguments)` |
 | Initializer | `init(subsystem: StaticString)` |
 | Initializer | `init(suiteName: String? = nil, namespace: String, maximumDataSize: Int = UserDefaultsKeyValueStore.defaultMaximumDataSize)` |
 | Initializer | `init(timeToLive: TimeInterval, corruptedEntryAction: InvalidCacheEntryAction = .remove, schemaMismatchAction: InvalidCacheEntryAction = .preserve, versionMismatchAction: InvalidCacheEntryAction = .remove)` |
@@ -223,6 +225,7 @@
 | Instance Method | `func cancel() async` |
 | Instance Method | `func fail(with error: AppError, preservingValue: Bool = true) -> LoadableState<Value>` |
 | Instance Method | `func insertIfMissing<Value>(_ value: Value, for key: CacheKey<Value>) async throws -> Bool where Value : Decodable, Value : Encodable, Value : Equatable, Value : Sendable` |
+| Instance Method | `func isOn(_ flag: DebugFlag) async -> Bool` |
 | Instance Method | `func log(_ event: BroadLogEvent)` |
 | Instance Method | `func log(_: BroadLogEvent)` |
 | Instance Method | `func now() -> Date` |
@@ -235,6 +238,8 @@
 | Instance Method | `func remove<Value>(_ key: CacheKey<Value>) async throws where Value : Decodable, Value : Encodable, Value : Sendable` |
 | Instance Method | `func remove<Value>(_ key: CacheKey<Value>, ifMatching expectedValue: Value) async throws -> Bool where Value : Decodable, Value : Encodable, Value : Equatable, Value : Sendable` |
 | Instance Method | `func replace<Value>(_ value: Value, ifMatching expectedValue: Value, for key: CacheKey<Value>) async throws -> Bool where Value : Decodable, Value : Encodable, Value : Equatable, Value : Sendable` |
+| Instance Method | `func reset(_ flags: [DebugFlag]) async` |
+| Instance Method | `func set(_ flag: DebugFlag, _ isOn: Bool) async` |
 | Instance Method | `func states() async -> AsyncStream<AppBootstrapState>` |
 | Instance Method | `func write(_ data: Data, forKey key: String) async throws` |
 | Instance Method | `func write(_ data: Data, forKey key: String) throws` |
@@ -242,13 +247,16 @@
 | Instance Method | `func write<Value>(_ value: Value, for key: CacheKey<Value>) async throws where Value : Decodable, Value : Encodable, Value : Sendable` |
 | Instance Property | `let corruptedEntryAction: InvalidCacheEntryAction` |
 | Instance Property | `let criticality: BootstrapCriticality` |
+| Instance Property | `let defaultValue: Bool` |
 | Instance Property | `let delays: [Duration]` |
 | Instance Property | `let diagnosticCode: String` |
 | Instance Property | `let expiresAt: Date` |
 | Instance Property | `let id: BootstrapStepID` |
 | Instance Property | `let identifier: String` |
 | Instance Property | `let isRetryable: Bool` |
+| Instance Property | `let key: String` |
 | Instance Property | `let kind: AppError.Kind` |
+| Instance Property | `let launchArgument: String?` |
 | Instance Property | `let limit: Duration` |
 | Instance Property | `let name: String` |
 | Instance Property | `let policy: CachePolicy` |
@@ -290,6 +298,8 @@
 | Structure | `struct CacheEnvelope<Value> where Value : Decodable, Value : Encodable, Value : Sendable` |
 | Structure | `struct CacheKey<Value> where Value : Decodable, Value : Encodable, Value : Sendable` |
 | Structure | `struct CachePolicy` |
+| Structure | `struct DebugFlag` |
+| Structure | `struct DebugFlagStore` |
 | Structure | `struct NoOpBroadLogger` |
 | Structure | `struct OSLogBroadLogger` |
 | Structure | `struct RequestTrackingAuthorizationUseCase` |

@@ -32,6 +32,21 @@ declaration находится в `PrivacyInfo.xcprivacy`, проверяетс�
 System adapter инкапсулирует ATT API. Модуль не выбирает момент запроса. Host или
 onboarding flow вызывает use case только после видимого первого слайда.
 
+## Debug flags
+
+`DebugFlagStore` хранит debug-переключатели поверх `KeyValueStoreProtocol` с
+опциональным launch-argument override. Persistence и namespacing делает
+инжектируемый store. Приложение объявляет свои `DebugFlag` (ключ, аргумент схемы,
+`defaultValue`), читает их под `#if DEBUG` и сбрасывает через `reset`. Store не
+содержит политики: Release-сборка его просто не создаёт.
+
+```swift
+let store = UserDefaultsKeyValueStore(namespace: "\(bundleIdentifier).debug")
+let flags = DebugFlagStore(store: store)
+let forcePremium = DebugFlag(key: "force-premium", launchArgument: "-debug-force-premium")
+if await flags.isOn(forcePremium) { /* ... */ }
+```
+
 ## Проверка
 
 ```bash

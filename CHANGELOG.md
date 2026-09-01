@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### Added
+
+- `DebugFlag` и `DebugFlagStore` — примитив debug-переключателей поверх
+  `KeyValueStoreProtocol`: опциональный launch-argument override, `defaultValue` и
+  `reset`; persistence и namespacing делает инжектируемый store. Даёт приложениям
+  общую основу под `#if DEBUG`-тумблеры вместо самодельного стора в каждом проекте.
+  Store сам по себе не несёт политики.
+
 ### Changed
 
 - верх README теперь ведёт в актуальную cross-module карту создания
