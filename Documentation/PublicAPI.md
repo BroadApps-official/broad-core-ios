@@ -156,6 +156,7 @@
 | Case | `case workBlocked(capability: BroadLogBackendCapability, reason: BroadLogBlocker)` |
 | Case | `case write` |
 | Class | `actor AppBootstrapCoordinator` |
+| Class | `actor FileSystemKeyValueStore` |
 | Class | `actor UserDefaultsKeyValueStore` |
 | Class | `actor VersionedJSONCacheRepository` |
 | Class | `final class BroadCoreAssembly` |
@@ -194,6 +195,7 @@
 | Initializer | `init()` |
 | Initializer | `init(bootstrapSteps: [BootstrapStep] = [], bootstrapErrorMessages: BootstrapErrorMessages = .englishDefault, cacheRepository: (any CacheRepositoryProtocol)? = nil, stateStore: (any KeyValueStoreProtocol)? = nil, logger: any BroadLoggerProtocol = NoOpBroadLogger(), trackingAuthorizationRepository: any TrackingAuthorizationRepositoryProtocol = SystemTrackingAuthorizationAdapter())` |
 | Initializer | `init(delays: [Duration])` |
+| Initializer | `init(directoryURL: URL, namespace: String, maximumDataSize: Int = FileSystemKeyValueStore.defaultMaximumDataSize)` |
 | Initializer | `init(from decoder: any Decoder) throws` |
 | Initializer | `init(id: BootstrapStepID, name: String, criticality: BootstrapCriticality, timeoutPolicy: TimeoutPolicy, retryPolicy: RetryPolicy, operation: @escaping BootstrapStep.Operation)` |
 | Initializer | `init(identifier: String = "BroadCore")` |
@@ -206,6 +208,7 @@
 | Initializer | `init(repository: any TrackingAuthorizationRepositoryProtocol)` |
 | Initializer | `init(steps: [BootstrapStep], errorMessages: BootstrapErrorMessages = .englishDefault, logger: any BroadLoggerProtocol = NoOpBroadLogger())` |
 | Initializer | `init(subsystem: StaticString)` |
+| Initializer | `init(subsystem: String)` |
 | Initializer | `init(suiteName: String? = nil, namespace: String, maximumDataSize: Int = UserDefaultsKeyValueStore.defaultMaximumDataSize)` |
 | Initializer | `init(timeToLive: TimeInterval, corruptedEntryAction: InvalidCacheEntryAction = .remove, schemaMismatchAction: InvalidCacheEntryAction = .preserve, versionMismatchAction: InvalidCacheEntryAction = .remove)` |
 | Initializer | `init(timeout: String, unknown: String)` |
@@ -228,10 +231,13 @@
 | Instance Method | `func now() -> Date` |
 | Instance Method | `func read(_ key: String) -> KeyValueStoreEntry` |
 | Instance Method | `func read(_ key: String) async throws -> KeyValueStoreEntry` |
+| Instance Method | `func read(_ key: String) throws -> KeyValueStoreEntry` |
 | Instance Method | `func read<Value>(_ key: CacheKey<Value>) async throws -> CacheReadResult<Value> where Value : Decodable, Value : Encodable, Value : Sendable` |
 | Instance Method | `func remove(_ key: String)` |
 | Instance Method | `func remove(_ key: String) async throws` |
+| Instance Method | `func remove(_ key: String) throws` |
 | Instance Method | `func remove(_ key: String, ifMatching snapshot: KeyValueStoreEntry) -> Bool` |
+| Instance Method | `func remove(_ key: String, ifMatching snapshot: KeyValueStoreEntry) throws -> Bool` |
 | Instance Method | `func remove<Value>(_ key: CacheKey<Value>) async throws where Value : Decodable, Value : Encodable, Value : Sendable` |
 | Instance Method | `func remove<Value>(_ key: CacheKey<Value>, ifMatching expectedValue: Value) async throws -> Bool where Value : Decodable, Value : Encodable, Value : Equatable, Value : Sendable` |
 | Instance Method | `func replace<Value>(_ value: Value, ifMatching expectedValue: Value, for key: CacheKey<Value>) async throws -> Bool where Value : Decodable, Value : Encodable, Value : Equatable, Value : Sendable` |

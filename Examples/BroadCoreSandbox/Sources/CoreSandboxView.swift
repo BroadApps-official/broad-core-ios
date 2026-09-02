@@ -1,4 +1,5 @@
 import BroadCore
+import Foundation
 import SwiftUI
 
 struct CoreSandboxView: View {
@@ -10,6 +11,9 @@ struct CoreSandboxView: View {
         retryCount: 3,
         initialDelay: 0.25,
         maximumDelay: 1
+    )
+    private let logger = OSLogBroadLogger(
+        subsystem: Bundle.main.bundleIdentifier ?? "com.broadapps.core-sandbox"
     )
 
     var body: some View {
@@ -65,7 +69,8 @@ struct CoreSandboxView: View {
                     ) {
                         .completed
                     }
-                ]
+                ],
+                logger: logger
             )
             let state = await coordinator()
             bootstrapState = String(describing: state)

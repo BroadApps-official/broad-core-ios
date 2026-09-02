@@ -17,6 +17,8 @@ Foundation contracts for reliable BroadApps iPhone application startup and state
 - ``CachePolicy``
 - ``CacheEnvelope``
 - ``CacheReadResult``
+- ``UserDefaultsKeyValueStore``
+- ``FileSystemKeyValueStore``
 
 ### Errors and logging
 
@@ -24,6 +26,7 @@ Foundation contracts for reliable BroadApps iPhone application startup and state
 - ``NetworkFailureClassifier``
 - ``BroadLoggerProtocol``
 - ``BroadLogEvent``
+- ``OSLogBroadLogger``
 
 ### Tracking
 

@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### Added
+
+- `OSLogBroadLogger(subsystem: String)` принимает runtime bundle ID без второй
+  hardcoded строки; прежний `StaticString` initializer сохранён.
+- `FileSystemKeyValueStore` даёт атомарное файловое хранение с namespace,
+  размерным лимитом и compare-and-swap для offline-каталогов, которые не должны
+  помещаться в 512-КБ `UserDefaults` value.
+
 ### Changed
 
 - верх README теперь ведёт в актуальную cross-module карту создания

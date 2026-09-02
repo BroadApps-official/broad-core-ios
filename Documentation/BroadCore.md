@@ -16,6 +16,12 @@ Cache envelope хранит schema, version, saved/expires dates и typed value.
 result всегда `fresh`, `stale` или `missing(reason)`. Caller явно решает, можно
 ли показывать stale UI; cache не создаёт remote authority.
 
+`UserDefaultsKeyValueStore` предназначен для небольших flags/state и по
+умолчанию ограничивает value 512 КБ. Большие offline-каталоги подключаются через
+`FileSystemKeyValueStore`: host передаёт cache directory, namespace и явный
+лимит. Запись атомарная, key не становится именем файла, conditional write и
+remove сохраняют общий compare-and-swap contract.
+
 ## States and errors
 
 `LoadableState` не смешивает idle/loading/content/empty/error/stale. `AppError`
@@ -26,6 +32,10 @@ result всегда `fresh`, `stale` или `missing(reason)`. Caller явно �
 События typed; raw error description запрещён. UserDefaults accessed-reason
 declaration находится в `PrivacyInfo.xcprivacy`, проверяется source gate и
 наличием идентичной копии в sandbox `.app`.
+
+Logging subsystem можно передать прямо из
+`Bundle.main.bundleIdentifier ?? "com.example.app"`. Отдельная hardcoded копия
+bundle ID не нужна.
 
 ## Tracking
 

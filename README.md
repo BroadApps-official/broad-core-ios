@@ -112,6 +112,8 @@ import BroadCore
 ## Minimal bootstrap
 
 ```swift
+let loggingSubsystem = Bundle.main.bundleIdentifier ?? "com.example.app"
+
 let bootstrap = AppBootstrapCoordinator(
     steps: [
         BootstrapStep(
@@ -124,7 +126,7 @@ let bootstrap = AppBootstrapCoordinator(
             .completed
         }
     ],
-    logger: OSLogBroadLogger(subsystem: "com.example.app")
+    logger: OSLogBroadLogger(subsystem: loggingSubsystem)
 )
 
 let state = await bootstrap()
@@ -133,10 +135,34 @@ let state = await bootstrap()
 Critical failure выбирает безопасный failed route. Background failure может
 сделать итог degraded, но не зависает бесконечно.
 
+`OSLogBroadLogger` принимает и строковый literal, и runtime `String`, поэтому
+bundle ID не нужно дублировать в composition root.
+
 ## Cache contract
 
 `VersionedJSONCacheRepository` проверяет schema, version, TTL и corruption
 отдельно. Policy явно задаёт, удалить или сохранить неподходящую запись.
+
+Маленькие flags/state можно хранить в `UserDefaultsKeyValueStore`. Для большого
+offline-каталога используйте готовый file-backed store, а не увеличивайте лимит
+`UserDefaults`:
+
+```swift
+let cacheDirectory = FileManager.default.urls(
+    for: .cachesDirectory,
+    in: .userDomainMask
+).first!.appendingPathComponent("BroadAppsCatalog", isDirectory: true)
+
+let store = FileSystemKeyValueStore(
+    directoryURL: cacheDirectory,
+    namespace: Bundle.main.bundleIdentifier ?? "com.example.app",
+    maximumDataSize: 4 * 1024 * 1024
+)
+```
+
+`FileSystemKeyValueStore` создаёт каталог при первой записи, пишет атомарно,
+хеширует namespace+key в безопасное имя файла и поддерживает тот же
+compare-and-swap contract, что и `UserDefaultsKeyValueStore`.
 
 ```swift
 let policy = CachePolicy(
@@ -158,6 +184,8 @@ Core предоставляет adapter/use case, но момент запрос
 - `AppBootstrapCoordinator`, `BootstrapStep`, `BootstrapErrorMessages`;
 - `RetryPolicy`, `TimeoutPolicy`;
 - `CachePolicy`, `CacheEnvelope`, `CacheReadResult`, cache repositories;
+- `UserDefaultsKeyValueStore` для небольшого state и
+  `FileSystemKeyValueStore` для больших cache payload;
 - `LoadableState`, `AppError`, `NetworkFailureClassifier`;
 - `BroadLoggerProtocol`, typed `BroadLogEvent`, OSLog/no-op adapters;
 - `TrackingAuthorizationUseCaseProtocol` и system adapter;
@@ -171,8 +199,9 @@ Core предоставляет adapter/use case, но момент запрос
 bash Scripts/run_contract_probes.sh
 ```
 
-Probe компилирует настоящие production policy/network types и проверяет retry,
-timeout, cache и safe network classification без XCTest/Swift Testing.
+Probe компилирует настоящие production types и проверяет retry, timeout, cache,
+safe network classification и file-backed read/write/CAS без XCTest/Swift
+Testing.
 
 ## Sandbox
 

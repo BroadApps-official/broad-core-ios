@@ -5,6 +5,7 @@ set -euo pipefail
 module_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 probe_directory="$module_root/.build/ContractProbes"
 probe_binary="$probe_directory/BroadCorePolicyProbe"
+storage_probe_binary="$probe_directory/BroadCoreStorageProbe"
 
 mkdir -p "$probe_directory"
 xcrun swiftc \
@@ -16,4 +17,11 @@ xcrun swiftc \
     -o "$probe_binary"
 "$probe_binary"
 
-echo "BroadCore policy and network contract probe passed."
+xcrun swiftc \
+    "$module_root/Sources/BroadCore/Application/Storage/KeyValueStoreProtocol.swift" \
+    "$module_root/Sources/BroadCore/Infrastructure/Persistence/FileSystemKeyValueStore.swift" \
+    "$module_root/Scripts/ContractProbes/BroadCoreStorageProbe.swift" \
+    -o "$storage_probe_binary"
+"$storage_probe_binary"
+
+echo "BroadCore policy, network and file-storage contract probes passed."
