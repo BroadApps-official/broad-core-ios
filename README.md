@@ -12,7 +12,7 @@
   <img alt="iOS 17+" src="https://img.shields.io/badge/iOS-17%2B-111827?logo=apple&amp;logoColor=white">
   <img alt="Swift 5" src="https://img.shields.io/badge/Swift-language%20mode%205-F05138?logo=swift&amp;logoColor=white">
   <img alt="SPM ready" src="https://img.shields.io/badge/SPM-ready-3B82F6">
-  <img alt="Release 1.0.0" src="https://img.shields.io/badge/release-1.0.0-10B981">
+  <img alt="Release 1.1.0" src="https://img.shields.io/badge/release-1.1.0-10B981">
 </p>
 
 Foundation‑модуль BroadApps для bootstrap, cache, typed states/errors, logging,
@@ -98,7 +98,7 @@ umbrella package нет.
 dependencies: [
     .package(
         url: "https://github.com/BroadApps-official/broad-core-ios.git",
-        from: "1.0.0"
+        from: "1.1.0"
     )
 ]
 ```
