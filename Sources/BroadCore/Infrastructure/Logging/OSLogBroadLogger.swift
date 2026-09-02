@@ -18,12 +18,15 @@ public struct OSLogBroadLogger: BroadLoggerProtocol {
     private let blockedLogger: Logger
     private let passLogger: Logger
 
+    /// Compile-time subsystem literal. Prefer ``init(subsystem:)-(String)`` to set
+    /// the subsystem from `Bundle.main.bundleIdentifier` at runtime instead of
+    /// duplicating the bundle id as a literal.
     public init(subsystem: StaticString) {
         self.init(subsystem: subsystem.description)
     }
 
-    /// Creates the logger from a runtime value such as
-    /// `Bundle.main.bundleIdentifier`.
+    /// Runtime subsystem, so a host can pass `Bundle.main.bundleIdentifier`
+    /// directly rather than repeating it as a compile-time literal.
     public init(subsystem: String) {
         precondition(!subsystem.isEmpty, "Logging subsystem must not be empty")
         precondition(subsystem.utf8.count <= 255, "Logging subsystem must not exceed 255 UTF-8 bytes")

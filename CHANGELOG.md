@@ -6,11 +6,23 @@
 
 ### Added
 
-- `OSLogBroadLogger(subsystem: String)` принимает runtime bundle ID без второй
-  hardcoded строки; прежний `StaticString` initializer сохранён.
 - `FileSystemKeyValueStore` даёт атомарное файловое хранение с namespace,
   размерным лимитом и compare-and-swap для offline-каталогов, которые не должны
   помещаться в 512-КБ `UserDefaults` value.
+- `DebugFlag` и `DebugFlagStore` — примитив debug-переключателей поверх
+  `KeyValueStoreProtocol`: опциональный launch-argument override, `defaultValue` и
+  `reset`; persistence и namespacing делает инжектируемый store. Даёт приложениям
+  общую основу под `#if DEBUG`-тумблеры вместо самодельного стора в каждом проекте.
+  Store сам по себе не несёт политики.
+- `DebugKeychainScope`, `DebugKeychainCleanupOutcome` и `DebugKeychainCleaner`
+  (только `#if DEBUG`) — очистка точных app-owned generic-password сервисов
+  Keychain для сброса состояния между test-прогонами. Никогда не запускается на
+  старте и не трогает unscoped Keychain-класс — удаляются только названные хостом
+  сервисы. В Release не компилируется.
+- `OSLogBroadLogger.init(subsystem: String)` — рантайм-инициализатор логгера:
+  subsystem можно задать из `Bundle.main.bundleIdentifier`, не повторяя bundle id
+  как `StaticString`-литерал. `StaticString`-версия сохранена и делегирует в
+  новую, поэтому существующий код не ломается.
 
 ### Changed
 
