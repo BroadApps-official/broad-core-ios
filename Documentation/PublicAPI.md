@@ -213,6 +213,7 @@
 | Initializer | `init(steps: [BootstrapStep], errorMessages: BootstrapErrorMessages = .englishDefault, logger: any BroadLoggerProtocol = NoOpBroadLogger())` |
 | Initializer | `init(store: any KeyValueStoreProtocol, arguments: [String] = ProcessInfo.processInfo.arguments)` |
 | Initializer | `init(subsystem: StaticString)` |
+| Initializer | `init(subsystem: String)` |
 | Initializer | `init(suiteName: String? = nil, namespace: String, maximumDataSize: Int = UserDefaultsKeyValueStore.defaultMaximumDataSize)` |
 | Initializer | `init(timeToLive: TimeInterval, corruptedEntryAction: InvalidCacheEntryAction = .remove, schemaMismatchAction: InvalidCacheEntryAction = .preserve, versionMismatchAction: InvalidCacheEntryAction = .remove)` |
 | Initializer | `init(timeout: String, unknown: String)` |

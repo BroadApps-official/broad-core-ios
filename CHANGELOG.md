@@ -16,6 +16,10 @@
   Keychain для сброса состояния между test-прогонами. Никогда не запускается на
   старте и не трогает unscoped Keychain-класс — удаляются только названные хостом
   сервисы. В Release не компилируется.
+- `OSLogBroadLogger.init(subsystem: String)` — рантайм-инициализатор логгера:
+  subsystem можно задать из `Bundle.main.bundleIdentifier`, не повторяя bundle id
+  как `StaticString`-литерал. `StaticString`-версия сохранена и делегирует в
+  новую, поэтому существующий код не ломается.
 
 ### Changed
 

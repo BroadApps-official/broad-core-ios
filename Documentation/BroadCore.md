@@ -27,6 +27,11 @@ result всегда `fresh`, `stale` или `missing(reason)`. Caller явно �
 declaration находится в `PrivacyInfo.xcprivacy`, проверяется source gate и
 наличием идентичной копии в sandbox `.app`.
 
+`OSLogBroadLogger` принимает subsystem как `String` (`init(subsystem: String)`) —
+его удобно задать из `Bundle.main.bundleIdentifier` без повторения bundle id
+литералом. `init(subsystem: StaticString)` сохранён и делегирует в строковую
+версию.
+
 ## Tracking
 
 System adapter инкапсулирует ATT API. Модуль не выбирает момент запроса. Host или

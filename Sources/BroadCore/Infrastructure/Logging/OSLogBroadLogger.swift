@@ -18,29 +18,37 @@ public struct OSLogBroadLogger: BroadLoggerProtocol {
     private let blockedLogger: Logger
     private let passLogger: Logger
 
+    /// Compile-time subsystem literal. Prefer ``init(subsystem:)-(String)`` to set
+    /// the subsystem from `Bundle.main.bundleIdentifier` at runtime instead of
+    /// duplicating the bundle id as a literal.
     public init(subsystem: StaticString) {
-        let subsystemValue = subsystem.description
-        precondition(!subsystemValue.isEmpty, "Logging subsystem must not be empty")
-        precondition(subsystemValue.utf8.count <= 255, "Logging subsystem must not exceed 255 UTF-8 bytes")
-        bootstrapLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.bootstrap.rawValue)
-        cacheLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.cache.rawValue)
-        networkingLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.networking.rawValue)
-        monetizationLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.monetization.rawValue)
-        paywallLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.paywall.rawValue)
-        purchaseLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.purchase.rawValue)
-        ruBillingLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.ruBilling.rawValue)
-        experimentsLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.experiments.rawValue)
-        inputLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.input.rawValue)
-        backendLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.backend.rawValue)
-        flowLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.flow.rawValue)
-        tokensLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.tokens.rawValue)
-        analyticsLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.analytics.rawValue)
+        self.init(subsystem: subsystem.description)
+    }
+
+    /// Runtime subsystem, so a host can pass `Bundle.main.bundleIdentifier`
+    /// directly rather than repeating it as a compile-time literal.
+    public init(subsystem: String) {
+        precondition(!subsystem.isEmpty, "Logging subsystem must not be empty")
+        precondition(subsystem.utf8.count <= 255, "Logging subsystem must not exceed 255 UTF-8 bytes")
+        bootstrapLogger = Logger(subsystem: subsystem, category: BroadLogCategory.bootstrap.rawValue)
+        cacheLogger = Logger(subsystem: subsystem, category: BroadLogCategory.cache.rawValue)
+        networkingLogger = Logger(subsystem: subsystem, category: BroadLogCategory.networking.rawValue)
+        monetizationLogger = Logger(subsystem: subsystem, category: BroadLogCategory.monetization.rawValue)
+        paywallLogger = Logger(subsystem: subsystem, category: BroadLogCategory.paywall.rawValue)
+        purchaseLogger = Logger(subsystem: subsystem, category: BroadLogCategory.purchase.rawValue)
+        ruBillingLogger = Logger(subsystem: subsystem, category: BroadLogCategory.ruBilling.rawValue)
+        experimentsLogger = Logger(subsystem: subsystem, category: BroadLogCategory.experiments.rawValue)
+        inputLogger = Logger(subsystem: subsystem, category: BroadLogCategory.input.rawValue)
+        backendLogger = Logger(subsystem: subsystem, category: BroadLogCategory.backend.rawValue)
+        flowLogger = Logger(subsystem: subsystem, category: BroadLogCategory.flow.rawValue)
+        tokensLogger = Logger(subsystem: subsystem, category: BroadLogCategory.tokens.rawValue)
+        analyticsLogger = Logger(subsystem: subsystem, category: BroadLogCategory.analytics.rawValue)
         uiLogger = Logger(
-            subsystem: subsystemValue,
+            subsystem: subsystem,
             category: BroadLogCategory.userInterface.rawValue
         )
-        blockedLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.blocked.rawValue)
-        passLogger = Logger(subsystem: subsystemValue, category: BroadLogCategory.pass.rawValue)
+        blockedLogger = Logger(subsystem: subsystem, category: BroadLogCategory.blocked.rawValue)
+        passLogger = Logger(subsystem: subsystem, category: BroadLogCategory.pass.rawValue)
     }
 
     public func log(_ event: BroadLogEvent) {
