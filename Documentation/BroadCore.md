@@ -47,6 +47,12 @@ let forcePremium = DebugFlag(key: "force-premium", launchArgument: "-debug-force
 if await flags.isOn(forcePremium) { /* ... */ }
 ```
 
+`DebugKeychainCleaner` (только `#if DEBUG`) удаляет точные app-owned
+generic-password сервисы Keychain, которые перечислит хост через
+`DebugKeychainScope`, чтобы сбросить состояние между test-прогонами. Он не
+запускается на старте и не трогает unscoped Keychain-класс. Release-сборка его не
+содержит.
+
 ## Проверка
 
 ```bash

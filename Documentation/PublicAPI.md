@@ -39,6 +39,7 @@
 | Case | `case catalogUnavailable` |
 | Case | `case cleanup` |
 | Case | `case completed` |
+| Case | `case completed(clearedServiceCount: Int, alreadyEmptyServiceCount: Int)` |
 | Case | `case content` |
 | Case | `case cooldown` |
 | Case | `case corrupted` |
@@ -156,6 +157,7 @@
 | Case | `case workBlocked(capability: BroadLogBackendCapability, reason: BroadLogBlocker)` |
 | Case | `case write` |
 | Class | `actor AppBootstrapCoordinator` |
+| Class | `actor DebugKeychainCleaner` |
 | Class | `actor UserDefaultsKeyValueStore` |
 | Class | `actor VersionedJSONCacheRepository` |
 | Class | `final class BroadCoreAssembly` |
@@ -183,6 +185,7 @@
 | Enumeration | `enum CacheMissReason` |
 | Enumeration | `enum CacheReadResult<Value> where Value : Decodable, Value : Encodable, Value : Sendable` |
 | Enumeration | `enum CacheRepositoryError` |
+| Enumeration | `enum DebugKeychainCleanupOutcome` |
 | Enumeration | `enum InvalidCacheEntryAction` |
 | Enumeration | `enum KeyValueStoreEntry` |
 | Enumeration | `enum KeyValueStoreError` |
@@ -205,6 +208,8 @@
 | Initializer | `init(now: @escaping () -> Date)` |
 | Initializer | `init(rawValue: String)` |
 | Initializer | `init(repository: any TrackingAuthorizationRepositoryProtocol)` |
+| Initializer | `init(scopes: [DebugKeychainScope], failureError: AppError)` |
+| Initializer | `init(service: String, accessGroup: String? = nil)` |
 | Initializer | `init(steps: [BootstrapStep], errorMessages: BootstrapErrorMessages = .englishDefault, logger: any BroadLoggerProtocol = NoOpBroadLogger())` |
 | Initializer | `init(store: any KeyValueStoreProtocol, arguments: [String] = ProcessInfo.processInfo.arguments)` |
 | Initializer | `init(subsystem: StaticString)` |
@@ -223,6 +228,7 @@
 | Instance Method | `func assemble(container: Container)` |
 | Instance Method | `func beginLoading(preservingValue: Bool = true) -> LoadableState<Value>` |
 | Instance Method | `func cancel() async` |
+| Instance Method | `func clear() -> DebugKeychainCleanupOutcome` |
 | Instance Method | `func fail(with error: AppError, preservingValue: Bool = true) -> LoadableState<Value>` |
 | Instance Method | `func insertIfMissing<Value>(_ value: Value, for key: CacheKey<Value>) async throws -> Bool where Value : Decodable, Value : Encodable, Value : Equatable, Value : Sendable` |
 | Instance Method | `func isOn(_ flag: DebugFlag) async -> Bool` |
@@ -245,6 +251,7 @@
 | Instance Method | `func write(_ data: Data, forKey key: String) throws` |
 | Instance Method | `func write(_ data: Data, forKey key: String, ifMatching snapshot: KeyValueStoreEntry) throws -> Bool` |
 | Instance Method | `func write<Value>(_ value: Value, for key: CacheKey<Value>) async throws where Value : Decodable, Value : Encodable, Value : Sendable` |
+| Instance Property | `let accessGroup: String?` |
 | Instance Property | `let corruptedEntryAction: InvalidCacheEntryAction` |
 | Instance Property | `let criticality: BootstrapCriticality` |
 | Instance Property | `let defaultValue: Bool` |
@@ -265,6 +272,7 @@
 | Instance Property | `let savedAt: Date` |
 | Instance Property | `let schemaIdentifier: String` |
 | Instance Property | `let schemaMismatchAction: InvalidCacheEntryAction` |
+| Instance Property | `let service: String` |
 | Instance Property | `let timeToLive: TimeInterval` |
 | Instance Property | `let timeout: String` |
 | Instance Property | `let timeoutPolicy: TimeoutPolicy` |
@@ -300,6 +308,7 @@
 | Structure | `struct CachePolicy` |
 | Structure | `struct DebugFlag` |
 | Structure | `struct DebugFlagStore` |
+| Structure | `struct DebugKeychainScope` |
 | Structure | `struct NoOpBroadLogger` |
 | Structure | `struct OSLogBroadLogger` |
 | Structure | `struct RequestTrackingAuthorizationUseCase` |

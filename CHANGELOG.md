@@ -11,6 +11,11 @@
   `reset`; persistence и namespacing делает инжектируемый store. Даёт приложениям
   общую основу под `#if DEBUG`-тумблеры вместо самодельного стора в каждом проекте.
   Store сам по себе не несёт политики.
+- `DebugKeychainScope`, `DebugKeychainCleanupOutcome` и `DebugKeychainCleaner`
+  (только `#if DEBUG`) — очистка точных app-owned generic-password сервисов
+  Keychain для сброса состояния между test-прогонами. Никогда не запускается на
+  старте и не трогает unscoped Keychain-класс — удаляются только названные хостом
+  сервисы. В Release не компилируется.
 
 ### Changed
 
