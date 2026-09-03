@@ -2,6 +2,28 @@
 
 Все заметные изменения BroadCore фиксируются здесь с объяснением: что изменилось и почему.
 
+## 1.2.0
+
+### Added
+
+- `BroadSupportLogRecorder` — in-memory ring buffer typed-событий, который
+  отдаёт готовый `support-log.txt` (`makeSupportLog()` / `makeSupportLogData()`)
+  для вложения в письмо в поддержку. Раньше контракт `SupportEmail.md` требовал
+  прикрепить настоящий лог, а платформа не давала источника — host-приложения
+  либо подставляли fixture-строку, либо писали собственный логгер. Буфер
+  ограничен `capacity`, вытесненные записи считаются, I/O отсутствует; строки
+  собираются тем же форматтером, что и Console, поэтому секреты и payload туда
+  попасть не могут по построению.
+- `CompositeBroadLogger` — fan-out на несколько `BroadLoggerProtocol`, чтобы
+  composition root передавал один logger, пишущий и в OSLog, и в recorder.
+
+### Changed
+
+- Безопасный рендеринг `BroadLogEvent` в строку вынесен из `OSLogBroadLogger` во
+  внутренний `BroadLogEventFormatter`; публичный API и вывод OSLog не изменились.
+- Sandbox показывает секцию «Support log» с содержимым recorder-а; добавлен
+  contract probe `BroadCoreLoggingProbe`.
+
 ## 1.1.0
 
 ### Added

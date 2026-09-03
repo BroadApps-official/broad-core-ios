@@ -12,9 +12,17 @@ struct CoreSandboxView: View {
         initialDelay: 0.25,
         maximumDelay: 1
     )
-    private let logger = OSLogBroadLogger(
-        subsystem: Bundle.main.bundleIdentifier ?? "com.broadapps.core-sandbox"
-    )
+    private let supportLogRecorder = BroadSupportLogRecorder()
+    private let logger: CompositeBroadLogger
+
+    init() {
+        logger = CompositeBroadLogger(
+            loggers: [
+                OSLogBroadLogger(subsystem: Bundle.main.bundleIdentifier ?? "com.broadapps.core-sandbox"),
+                supportLogRecorder
+            ]
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -44,6 +52,12 @@ struct CoreSandboxView: View {
                         value: String(describing: NetworkFailureClassifier.classify(URLError(.notConnectedToInternet)))
                     )
                     LabeledContent("Raw URL/error", value: "not logged")
+                }
+
+                Section("Support log") {
+                    LabeledContent("Recorded events", value: "\(supportLogRecorder.entryCount)")
+                    Text(supportLogRecorder.makeSupportLog())
+                        .font(.caption.monospaced())
                 }
 
                 Section("ATT boundary") {
