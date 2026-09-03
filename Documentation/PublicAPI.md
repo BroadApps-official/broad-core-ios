@@ -210,7 +210,7 @@
 | Initializer | `init(limit: Duration)` |
 | Initializer | `init(loggers: [any BroadLoggerProtocol])` |
 | Initializer | `init(name: String, schemaIdentifier: String, version: Int, policy: CachePolicy)` |
-| Initializer | `init(now: @escaping @Sendable () -> Date)` |
+| Initializer | `init(now: @escaping () -> Date)` |
 | Initializer | `init(rawValue: String)` |
 | Initializer | `init(repository: any TrackingAuthorizationRepositoryProtocol)` |
 | Initializer | `init(scopes: [DebugKeychainScope], failureError: AppError)` |
@@ -331,7 +331,7 @@
 | Structure | `struct RetryPolicy` |
 | Structure | `struct SystemTrackingAuthorizationAdapter` |
 | Structure | `struct TimeoutPolicy` |
-| Type Alias | `typealias Operation = @Sendable () async throws -> BootstrapStepCompletion` |
+| Type Alias | `typealias Operation = () async throws -> BootstrapStepCompletion` |
 | Type Method | `static func classify(_ error: any Error) -> NetworkFailureKind` |
 | Type Method | `static func exponential(retryCount: Int, initialDelay: TimeInterval, multiplier: Double = 2, maximumDelay: TimeInterval) -> RetryPolicy` |
 | Type Method | `static func fixed(retryCount: Int, delay: TimeInterval) -> RetryPolicy` |
