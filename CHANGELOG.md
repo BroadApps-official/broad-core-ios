@@ -2,7 +2,7 @@
 
 Все заметные изменения BroadCore фиксируются здесь с объяснением: что изменилось и почему.
 
-## Unreleased
+## 1.2.0
 
 ### Added
 
@@ -15,6 +15,20 @@
 - `ServerTimeReading` и `ServerTimeProviderProtocol` — чтение всегда несёт ярлык
   доверия (`synchronized` / `unverified`), поэтому хост не может молча остаться
   на часах устройства, а фича может потребовать подтверждённое время явно.
+- `BroadSupportLogRecorder` — in-memory ring buffer typed-событий, который
+  отдаёт готовый `support-log.txt` (`makeSupportLog()` / `makeSupportLogData()`)
+  для вложения в письмо в поддержку. Буфер ограничен `capacity`, вытесненные
+  записи считаются, I/O отсутствует; строки собираются тем же безопасным
+  форматтером, что и Console.
+- `CompositeBroadLogger` — fan-out на несколько `BroadLoggerProtocol`, чтобы
+  composition root передавал один logger, пишущий и в OSLog, и в recorder.
+
+### Changed
+
+- Безопасный рендеринг `BroadLogEvent` в строку вынесен из `OSLogBroadLogger` во
+  внутренний `BroadLogEventFormatter`; публичный API и вывод OSLog не изменились.
+- Sandbox показывает секцию «Support log» с содержимым recorder-а; добавлен
+  contract probe `BroadCoreLoggingProbe`.
 
 ## 1.1.0
 
