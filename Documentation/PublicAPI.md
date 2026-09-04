@@ -133,6 +133,7 @@
 | Case | `case stale(value: Value, error: AppError?)` |
 | Case | `case starting` |
 | Case | `case storage` |
+| Case | `case synchronized(Date)` |
 | Case | `case timedOut` |
 | Case | `case timeout` |
 | Case | `case tokenBalance` |
@@ -145,6 +146,7 @@
 | Case | `case unavailable` |
 | Case | `case unknown` |
 | Case | `case unqualifiedRemoteConfiguration` |
+| Case | `case unverified(Date)` |
 | Case | `case userInterface` |
 | Case | `case valueTooLarge` |
 | Case | `case valueTooLarge(actualBytes: Int, maximumBytes: Int)` |
@@ -159,6 +161,7 @@
 | Class | `actor AppBootstrapCoordinator` |
 | Class | `actor DebugKeychainCleaner` |
 | Class | `actor FileSystemKeyValueStore` |
+| Class | `actor ServerSynchronizedClock` |
 | Class | `actor UserDefaultsKeyValueStore` |
 | Class | `actor VersionedJSONCacheRepository` |
 | Class | `final class BroadCoreAssembly` |
@@ -187,6 +190,7 @@
 | Enumeration | `enum CacheReadResult<Value> where Value : Decodable, Value : Encodable, Value : Sendable` |
 | Enumeration | `enum CacheRepositoryError` |
 | Enumeration | `enum DebugKeychainCleanupOutcome` |
+| Enumeration | `enum HTTPServerDate` |
 | Enumeration | `enum InvalidCacheEntryAction` |
 | Enumeration | `enum KeyValueStoreEntry` |
 | Enumeration | `enum KeyValueStoreError` |
@@ -194,6 +198,7 @@
 | Enumeration | `enum LoadableState<Value> where Value : Sendable` |
 | Enumeration | `enum NetworkFailureClassifier` |
 | Enumeration | `enum NetworkFailureKind` |
+| Enumeration | `enum ServerTimeReading` |
 | Enumeration | `enum TrackingAuthorizationStatus` |
 | Initializer | `init()` |
 | Initializer | `init(bootstrapSteps: [BootstrapStep] = [], bootstrapErrorMessages: BootstrapErrorMessages = .englishDefault, cacheRepository: (any CacheRepositoryProtocol)? = nil, stateStore: (any KeyValueStoreProtocol)? = nil, logger: any BroadLoggerProtocol = NoOpBroadLogger(), trackingAuthorizationRepository: any TrackingAuthorizationRepositoryProtocol = SystemTrackingAuthorizationAdapter())` |
@@ -214,6 +219,7 @@
 | Initializer | `init(service: String, accessGroup: String? = nil)` |
 | Initializer | `init(steps: [BootstrapStep], errorMessages: BootstrapErrorMessages = .englishDefault, logger: any BroadLoggerProtocol = NoOpBroadLogger())` |
 | Initializer | `init(store: any KeyValueStoreProtocol, arguments: [String] = ProcessInfo.processInfo.arguments)` |
+| Initializer | `init(store: any KeyValueStoreProtocol, storageKey: String = ServerSynchronizedClock.defaultStorageKey, now: @escaping () -> Date = { Date() })` |
 | Initializer | `init(subsystem: StaticString)` |
 | Initializer | `init(subsystem: String)` |
 | Initializer | `init(suiteName: String? = nil, namespace: String, maximumDataSize: Int = UserDefaultsKeyValueStore.defaultMaximumDataSize)` |
@@ -225,6 +231,7 @@
 | Instance Method | `@MainActor func requestAuthorization() async -> TrackingAuthorizationStatus` |
 | Instance Method | `@discardableResult @MainActor func callAsFunction() async -> TrackingAuthorizationStatus` |
 | Instance Method | `@discardableResult func callAsFunction() async -> AppBootstrapState` |
+| Instance Method | `@discardableResult func record(_ response: HTTPURLResponse) async -> Bool` |
 | Instance Method | `@discardableResult func remove(_ key: String, ifMatching snapshot: KeyValueStoreEntry) async throws -> Bool` |
 | Instance Method | `@discardableResult func retry() async -> AppBootstrapState` |
 | Instance Method | `@discardableResult func write(_ data: Data, forKey key: String, ifMatching snapshot: KeyValueStoreEntry) async throws -> Bool` |
@@ -235,6 +242,7 @@
 | Instance Method | `func fail(with error: AppError, preservingValue: Bool = true) -> LoadableState<Value>` |
 | Instance Method | `func insertIfMissing<Value>(_ value: Value, for key: CacheKey<Value>) async throws -> Bool where Value : Decodable, Value : Encodable, Value : Equatable, Value : Sendable` |
 | Instance Method | `func isOn(_ flag: DebugFlag) async -> Bool` |
+| Instance Method | `func isSynchronized() async -> Bool` |
 | Instance Method | `func log(_ event: BroadLogEvent)` |
 | Instance Method | `func log(_: BroadLogEvent)` |
 | Instance Method | `func now() -> Date` |
@@ -242,6 +250,8 @@
 | Instance Method | `func read(_ key: String) async throws -> KeyValueStoreEntry` |
 | Instance Method | `func read(_ key: String) throws -> KeyValueStoreEntry` |
 | Instance Method | `func read<Value>(_ key: CacheKey<Value>) async throws -> CacheReadResult<Value> where Value : Decodable, Value : Encodable, Value : Sendable` |
+| Instance Method | `func reading() async -> ServerTimeReading` |
+| Instance Method | `func record(_ date: Date) async` |
 | Instance Method | `func remove(_ key: String)` |
 | Instance Method | `func remove(_ key: String) async throws` |
 | Instance Method | `func remove(_ key: String) throws` |
@@ -250,6 +260,7 @@
 | Instance Method | `func remove<Value>(_ key: CacheKey<Value>) async throws where Value : Decodable, Value : Encodable, Value : Sendable` |
 | Instance Method | `func remove<Value>(_ key: CacheKey<Value>, ifMatching expectedValue: Value) async throws -> Bool where Value : Decodable, Value : Encodable, Value : Equatable, Value : Sendable` |
 | Instance Method | `func replace<Value>(_ value: Value, ifMatching expectedValue: Value, for key: CacheKey<Value>) async throws -> Bool where Value : Decodable, Value : Encodable, Value : Equatable, Value : Sendable` |
+| Instance Method | `func reset() async` |
 | Instance Method | `func reset(_ flags: [DebugFlag]) async` |
 | Instance Method | `func set(_ flag: DebugFlag, _ isOn: Bool) async` |
 | Instance Method | `func states() async -> AsyncStream<AppBootstrapState>` |
@@ -289,9 +300,11 @@
 | Instance Property | `let versionMismatchAction: InvalidCacheEntryAction` |
 | Instance Property | `var canRequestAuthorization: Bool { get }` |
 | Instance Property | `var category: BroadLogCategory { get }` |
+| Instance Property | `var date: Date { get }` |
 | Instance Property | `var error: AppError? { get }` |
 | Instance Property | `var hasContent: Bool { get }` |
 | Instance Property | `var isLoading: Bool { get }` |
+| Instance Property | `var isSynchronized: Bool { get }` |
 | Instance Property | `var level: BroadLogLevel { get }` |
 | Instance Property | `var name: String { get }` |
 | Instance Property | `var state: AppBootstrapState { get async }` |
@@ -301,6 +314,7 @@
 | Protocol | `protocol CacheRepositoryProtocol : Sendable` |
 | Protocol | `protocol KeyValueStoreProtocol : Sendable` |
 | Protocol | `protocol RunAppBootstrapUseCaseProtocol : Sendable` |
+| Protocol | `protocol ServerTimeProviderProtocol : Sendable` |
 | Protocol | `protocol TrackingAuthorizationRepositoryProtocol : Sendable` |
 | Protocol | `protocol TrackingAuthorizationUseCaseProtocol : Sendable` |
 | Structure | `struct AppError` |
@@ -323,11 +337,14 @@
 | Structure | `struct TimeoutPolicy` |
 | Type Alias | `typealias Operation = () async throws -> BootstrapStepCompletion` |
 | Type Method | `static func classify(_ error: any Error) -> NetworkFailureKind` |
+| Type Method | `static func date(from response: HTTPURLResponse) -> Date?` |
+| Type Method | `static func date(fromHeader header: String) -> Date?` |
 | Type Method | `static func exponential(retryCount: Int, initialDelay: TimeInterval, multiplier: Double = 2, maximumDelay: TimeInterval) -> RetryPolicy` |
 | Type Method | `static func fixed(retryCount: Int, delay: TimeInterval) -> RetryPolicy` |
 | Type Method | `static func seconds(_ value: TimeInterval) -> TimeoutPolicy` |
 | Type Property | `static let defaultMaximumDataSize: Int` |
 | Type Property | `static let defaultMaximumEncodedSize: Int` |
+| Type Property | `static let defaultStorageKey: String` |
 | Type Property | `static let englishDefault: BootstrapErrorMessages` |
 | Type Property | `static let none: RetryPolicy` |
 | Type Property | `static let system: CacheClock` |
