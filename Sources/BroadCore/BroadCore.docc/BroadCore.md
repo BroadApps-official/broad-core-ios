@@ -27,6 +27,9 @@ Foundation contracts for reliable BroadApps iPhone application startup and state
 - ``BroadLoggerProtocol``
 - ``BroadLogEvent``
 - ``OSLogBroadLogger``
+- ``BroadSupportLogRecorder``
+- ``CompositeBroadLogger``
+- ``NoOpBroadLogger``
 
 ### Tracking
 

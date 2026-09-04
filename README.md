@@ -12,7 +12,7 @@
   <img alt="iOS 17+" src="https://img.shields.io/badge/iOS-17%2B-111827?logo=apple&amp;logoColor=white">
   <img alt="Swift 5" src="https://img.shields.io/badge/Swift-language%20mode%205-F05138?logo=swift&amp;logoColor=white">
   <img alt="SPM ready" src="https://img.shields.io/badge/SPM-ready-3B82F6">
-  <img alt="Release 1.1.0" src="https://img.shields.io/badge/release-1.1.0-10B981">
+  <img alt="Release 1.2.0" src="https://img.shields.io/badge/release-1.2.0-10B981">
 </p>
 
 Foundation‑модуль BroadApps для bootstrap, cache, typed states/errors, logging,
@@ -98,7 +98,7 @@ umbrella package нет.
 dependencies: [
     .package(
         url: "https://github.com/BroadApps-official/broad-core-ios.git",
-        from: "1.1.0"
+        from: "1.2.0"
     )
 ]
 ```
@@ -137,6 +137,28 @@ Critical failure выбирает безопасный failed route. Background 
 
 `OSLogBroadLogger` принимает и строковый literal, и runtime `String`, поэтому
 bundle ID не нужно дублировать в composition root.
+
+## Support log для письма в поддержку
+
+`BroadSupportLogRecorder` копит те же typed-строки, что уходят в Console, в
+ограниченном in-memory буфере и отдаёт готовый `support-log.txt`. Через
+`CompositeBroadLogger` один logger пишет и в OSLog, и в recorder:
+
+```swift
+let supportLogRecorder = BroadSupportLogRecorder(capacity: 500)
+let logger = CompositeBroadLogger(
+    loggers: [
+        OSLogBroadLogger(subsystem: loggingSubsystem),
+        supportLogRecorder
+    ]
+)
+
+// Перед открытием Contact Us:
+let supportLogData = supportLogRecorder.makeSupportLogData()
+```
+
+В буфер попадают только закрытые enum, `Bool` и счётчики, поэтому вложение не
+требует отдельной очистки от секретов и payload.
 
 ## Cache contract
 
@@ -187,7 +209,8 @@ Core предоставляет adapter/use case, но момент запрос
 - `UserDefaultsKeyValueStore` для небольшого state и
   `FileSystemKeyValueStore` для больших cache payload;
 - `LoadableState`, `AppError`, `NetworkFailureClassifier`;
-- `BroadLoggerProtocol`, typed `BroadLogEvent`, OSLog/no-op adapters;
+- `BroadLoggerProtocol`, typed `BroadLogEvent`, OSLog/no-op adapters,
+  `BroadSupportLogRecorder` и `CompositeBroadLogger`;
 - `TrackingAuthorizationUseCaseProtocol` и system adapter;
 - `BroadCoreAssembly`.
 
