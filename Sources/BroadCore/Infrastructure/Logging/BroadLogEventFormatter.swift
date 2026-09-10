@@ -33,9 +33,23 @@ enum BroadLogEventFormatter {
              .workBlocked,
              .verificationPassed:
             developmentStatusMessage(for: event)
+        case let .host(hostEvent):
+            hostMessage(for: hostEvent)
         default:
             bootstrapLifecycleMessage(for: event)
         }
+    }
+
+    /// `code name=value name=value`. Both halves are already sanitized by
+    /// ``BroadLogHostEvent``, so the line cannot carry raw payloads.
+    private static func hostMessage(for event: BroadLogHostEvent) -> String {
+        guard !event.fields.isEmpty else {
+            return event.code
+        }
+        let fields = event.fields
+            .map { "\($0.name)=\($0.value)" }
+            .joined(separator: " ")
+        return "\(event.code) \(fields)"
     }
 
     private static func developmentStatusMessage(for event: BroadLogEvent) -> String {

@@ -44,7 +44,54 @@ enum BroadCoreLoggingProbe {
         expect(recorder.entryCount == 0 && recorder.droppedEventCount == 0, "reset clears entries and counters")
         expect(recorder.makeSupportLog().contains("entries=0 capacity=3 dropped=0"), "reset log is empty")
 
+        checkHostEvents()
+
         CompositeBroadLogger(loggers: []).log(.bootstrapRunJoined)
+    }
+
+    /// The host case carries app-owned codes into the same log, and sanitizes
+    /// them so a support letter cannot leak a URL, a receipt or a stack trace.
+    private static func checkHostEvents() {
+        let recorder = BroadSupportLogRecorder(capacity: 8)
+        recorder.log(.host(BroadLogHostEvent(
+            code: "musicfy.job.failed",
+            category: .backend,
+            level: .error,
+            fields: [BroadLogHostField("code", "MODERATION_BLOCKED"), BroadLogHostField("attempt", 2)]
+        )))
+        let log = recorder.makeSupportLog()
+        expect(
+            log.contains("[BACKEND] musicfy.job.failed code=MODERATION_BLOCKED attempt=2"),
+            "host event keeps its category, code and typed fields"
+        )
+
+        let leaking = BroadLogHostEvent(
+            code: "job failed at https://example.com/x?token=abc",
+            fields: [BroadLogHostField("message", "Bearer abc.def/ghi")]
+        )
+        expect(!leaking.code.contains("/") && !leaking.code.contains("?"), "code drops URL punctuation")
+        expect(!leaking.code.contains(" "), "code drops whitespace")
+        expect(!leaking.fields[0].value.contains("/"), "field value drops path separators")
+        expect(leaking.fields[0].value.count <= BroadLogHostEvent.maximumFieldLength, "field value is capped")
+
+        let empty = BroadLogHostEvent(code: "")
+        expect(empty.code == "host.event", "an empty code falls back to a stable name")
+        expect(BroadLogHostField("", "value").name == "field", "an empty field name falls back")
+
+        let many = BroadLogHostEvent(
+            code: "probe.fields",
+            fields: (0 ..< 20).map { BroadLogHostField("f\($0)", $0) }
+        )
+        expect(many.fields.count == BroadLogHostEvent.maximumFieldCount, "field count is capped")
+
+        expect(
+            BroadLogEvent.host(BroadLogHostEvent(code: "probe.level", level: .warning)).level == .warning,
+            "level comes from the host event"
+        )
+        expect(
+            BroadLogEvent.host(BroadLogHostEvent(code: "probe.name")).name == "probe.name",
+            "name is the host code"
+        )
     }
 
     private static func entryLines(in log: String) -> [String] {

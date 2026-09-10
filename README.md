@@ -12,7 +12,7 @@
   <img alt="iOS 17+" src="https://img.shields.io/badge/iOS-17%2B-111827?logo=apple&amp;logoColor=white">
   <img alt="Swift 5" src="https://img.shields.io/badge/Swift-language%20mode%205-F05138?logo=swift&amp;logoColor=white">
   <img alt="SPM ready" src="https://img.shields.io/badge/SPM-ready-3B82F6">
-  <img alt="Release 1.2.0" src="https://img.shields.io/badge/release-1.2.0-10B981">
+  <img alt="Release 1.3.0" src="https://img.shields.io/badge/release-1.3.0-10B981">
 </p>
 
 Foundation‑модуль BroadApps для bootstrap, cache, typed states/errors, logging,
@@ -98,7 +98,7 @@ umbrella package нет.
 dependencies: [
     .package(
         url: "https://github.com/BroadApps-official/broad-core-ios.git",
-        from: "1.2.0"
+        from: "1.3.0"
     )
 ]
 ```
@@ -159,6 +159,23 @@ let supportLogData = supportLogRecorder.makeSupportLogData()
 
 В буфер попадают только закрытые enum, `Bool` и счётчики, поэтому вложение не
 требует отдельной очистки от секретов и payload.
+
+Своё событие приложение пишет тем же logger'ом через `BroadLogEvent.host`:
+
+```swift
+logger.log(.host(BroadLogHostEvent(
+    code: "backend.job.failed",
+    category: .backend,
+    level: .error,
+    fields: [BroadLogHostField("code", "MODERATION_BLOCKED"), BroadLogHostField("attempt", 2)]
+)))
+```
+
+Это не свободный текст. Поле несёт код, enum или счётчик — не URL, не чек, не
+токен, не идентификатор и не сырое сообщение об ошибке. Код и поля санитайзятся
+на входе: всё вне `A-Za-z0-9._:-` заменяется на `-`, длина и число полей
+ограничены, поэтому неаккуратный вызов не протащит платёжные данные в файл,
+который пользователь отправляет в поддержку.
 
 ## Cache contract
 

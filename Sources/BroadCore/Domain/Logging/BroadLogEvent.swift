@@ -202,6 +202,10 @@ public enum BroadLogEvent: Equatable, Sendable {
     case workBlocked(capability: BroadLogBackendCapability, reason: BroadLogBlocker)
     case verificationPassed(BroadLogVerificationScope)
 
+    /// A typed event of the host app; see ``BroadLogHostEvent``. The platform
+    /// emits none of these itself.
+    case host(BroadLogHostEvent)
+
     public var category: BroadLogCategory {
         switch self {
         case .bootstrapRunStarted,
@@ -241,6 +245,8 @@ public enum BroadLogEvent: Equatable, Sendable {
             .blocked
         case .verificationPassed:
             .pass
+        case let .host(event):
+            event.category
         }
     }
 
@@ -279,6 +285,8 @@ public enum BroadLogEvent: Equatable, Sendable {
             .warning
         case .workBlocked:
             .error
+        case let .host(event):
+            event.level
         }
     }
 
@@ -312,6 +320,7 @@ public enum BroadLogEvent: Equatable, Sendable {
         case .uiVisualReviewRemaining: "ui.visual-review.remaining"
         case .workBlocked: "work.blocked"
         case .verificationPassed: "verification.passed"
+        case let .host(event): event.code
         }
     }
 }

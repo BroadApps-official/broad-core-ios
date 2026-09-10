@@ -37,6 +37,7 @@ xcrun swiftc \
 xcrun swiftc \
     "$module_root/Sources/BroadCore/Domain/Errors/AppError.swift" \
     "$module_root/Sources/BroadCore/Domain/Logging/BroadLogEvent.swift" \
+    "$module_root/Sources/BroadCore/Domain/Logging/BroadLogHostEvent.swift" \
     "$module_root/Sources/BroadCore/Domain/Logging/BroadLoggerProtocol.swift" \
     "$module_root/Sources/BroadCore/Infrastructure/Logging/BroadLogEventFormatter.swift" \
     "$module_root/Sources/BroadCore/Infrastructure/Logging/BroadSupportLogRecorder.swift" \

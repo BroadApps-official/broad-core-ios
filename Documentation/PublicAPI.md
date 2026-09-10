@@ -70,6 +70,7 @@
 | Case | `case full` |
 | Case | `case functional` |
 | Case | `case history` |
+| Case | `case host(BroadLogHostEvent)` |
 | Case | `case hostDisabled` |
 | Case | `case idle` |
 | Case | `case info` |
@@ -202,8 +203,12 @@
 | Enumeration | `enum ServerTimeReading` |
 | Enumeration | `enum TrackingAuthorizationStatus` |
 | Initializer | `init()` |
+| Initializer | `init(_ name: String, _ value: Bool)` |
+| Initializer | `init(_ name: String, _ value: Int)` |
+| Initializer | `init(_ name: String, _ value: String)` |
 | Initializer | `init(bootstrapSteps: [BootstrapStep] = [], bootstrapErrorMessages: BootstrapErrorMessages = .englishDefault, cacheRepository: (any CacheRepositoryProtocol)? = nil, stateStore: (any KeyValueStoreProtocol)? = nil, logger: any BroadLoggerProtocol = NoOpBroadLogger(), trackingAuthorizationRepository: any TrackingAuthorizationRepositoryProtocol = SystemTrackingAuthorizationAdapter())` |
 | Initializer | `init(capacity: Int = BroadSupportLogRecorder.defaultCapacity)` |
+| Initializer | `init(code: String, category: BroadLogCategory = .backend, level: BroadLogLevel = .info, fields: [BroadLogHostField] = [])` |
 | Initializer | `init(delays: [Duration])` |
 | Initializer | `init(directoryURL: URL, namespace: String, maximumDataSize: Int = FileSystemKeyValueStore.defaultMaximumDataSize)` |
 | Initializer | `init(from decoder: any Decoder) throws` |
@@ -276,18 +281,22 @@
 | Instance Method | `func write<Value>(_ value: Value, for key: CacheKey<Value>) async throws where Value : Decodable, Value : Encodable, Value : Sendable` |
 | Instance Property | `let accessGroup: String?` |
 | Instance Property | `let capacity: Int` |
+| Instance Property | `let category: BroadLogCategory` |
+| Instance Property | `let code: String` |
 | Instance Property | `let corruptedEntryAction: InvalidCacheEntryAction` |
 | Instance Property | `let criticality: BootstrapCriticality` |
 | Instance Property | `let defaultValue: Bool` |
 | Instance Property | `let delays: [Duration]` |
 | Instance Property | `let diagnosticCode: String` |
 | Instance Property | `let expiresAt: Date` |
+| Instance Property | `let fields: [BroadLogHostField]` |
 | Instance Property | `let id: BootstrapStepID` |
 | Instance Property | `let identifier: String` |
 | Instance Property | `let isRetryable: Bool` |
 | Instance Property | `let key: String` |
 | Instance Property | `let kind: AppError.Kind` |
 | Instance Property | `let launchArgument: String?` |
+| Instance Property | `let level: BroadLogLevel` |
 | Instance Property | `let limit: Duration` |
 | Instance Property | `let name: String` |
 | Instance Property | `let policy: CachePolicy` |
@@ -302,6 +311,7 @@
 | Instance Property | `let timeoutPolicy: TimeoutPolicy` |
 | Instance Property | `let unknown: String` |
 | Instance Property | `let userMessage: String` |
+| Instance Property | `let value: String` |
 | Instance Property | `let value: Value` |
 | Instance Property | `let version: Int` |
 | Instance Property | `let versionMismatchAction: InvalidCacheEntryAction` |
@@ -331,6 +341,8 @@
 | Structure | `struct BootstrapStep` |
 | Structure | `struct BootstrapStepID` |
 | Structure | `struct BroadCoreModule` |
+| Structure | `struct BroadLogHostEvent` |
+| Structure | `struct BroadLogHostField` |
 | Structure | `struct CacheClock` |
 | Structure | `struct CacheEnvelope<Value> where Value : Decodable, Value : Encodable, Value : Sendable` |
 | Structure | `struct CacheKey<Value> where Value : Decodable, Value : Encodable, Value : Sendable` |
@@ -357,5 +369,8 @@
 | Type Property | `static let defaultMaximumEncodedSize: Int` |
 | Type Property | `static let defaultStorageKey: String` |
 | Type Property | `static let englishDefault: BootstrapErrorMessages` |
+| Type Property | `static let maximumCodeLength: Int` |
+| Type Property | `static let maximumFieldCount: Int` |
+| Type Property | `static let maximumFieldLength: Int` |
 | Type Property | `static let none: RetryPolicy` |
 | Type Property | `static let system: CacheClock` |

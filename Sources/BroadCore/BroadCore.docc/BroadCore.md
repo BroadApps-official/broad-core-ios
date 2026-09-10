@@ -26,6 +26,8 @@ Foundation contracts for reliable BroadApps iPhone application startup and state
 - ``NetworkFailureClassifier``
 - ``BroadLoggerProtocol``
 - ``BroadLogEvent``
+- ``BroadLogHostEvent``
+- ``BroadLogHostField``
 - ``OSLogBroadLogger``
 - ``BroadSupportLogRecorder``
 - ``CompositeBroadLogger``
