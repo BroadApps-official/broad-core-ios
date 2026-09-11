@@ -5,6 +5,8 @@ import SwiftUI
 struct CoreSandboxView: View {
     @State private var bootstrapState = "idle"
     @State private var isRunning = false
+    /// Redraws the support log after a host event is written into the recorder.
+    @State private var loggedHostEvents = 0
 
     private let cachePolicy = CachePolicy(timeToLive: 3600)
     private let retryPolicy = RetryPolicy.exponential(
@@ -56,8 +58,22 @@ struct CoreSandboxView: View {
 
                 Section("Support log") {
                     LabeledContent("Recorded events", value: "\(supportLogRecorder.entryCount)")
+                    Button("Log a host event") {
+                        logger.log(.host(BroadLogHostEvent(
+                            code: "sandbox.job.failed",
+                            category: .backend,
+                            level: .error,
+                            fields: [
+                                BroadLogHostField("code", "MODERATION_BLOCKED"),
+                                BroadLogHostField("attempt", 2),
+                                BroadLogHostField("retry", false)
+                            ]
+                        )))
+                        loggedHostEvents += 1
+                    }
                     Text(supportLogRecorder.makeSupportLog())
                         .font(.caption.monospaced())
+                        .id(loggedHostEvents)
                 }
 
                 Section("ATT boundary") {

@@ -37,6 +37,7 @@ xcrun swiftc \
 xcrun swiftc \
     "$module_root/Sources/BroadCore/Domain/Errors/AppError.swift" \
     "$module_root/Sources/BroadCore/Domain/Logging/BroadLogEvent.swift" \
+    "$module_root/Sources/BroadCore/Domain/Logging/BroadLogHostEvent.swift" \
     "$module_root/Sources/BroadCore/Domain/Logging/BroadLoggerProtocol.swift" \
     "$module_root/Sources/BroadCore/Infrastructure/Logging/BroadLogEventFormatter.swift" \
     "$module_root/Sources/BroadCore/Infrastructure/Logging/BroadSupportLogRecorder.swift" \
@@ -45,5 +46,6 @@ xcrun swiftc \
     "$module_root/Scripts/ContractProbes/BroadCoreLoggingProbe.swift" \
     -o "$logging_probe_binary"
 "$logging_probe_binary"
+bash "$module_root/Scripts/check_host_log_api.sh"
 
 echo "BroadCore policy, network, file-storage, server-clock and logging contract probes passed."

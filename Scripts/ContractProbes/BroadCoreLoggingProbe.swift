@@ -44,7 +44,65 @@ enum BroadCoreLoggingProbe {
         expect(recorder.entryCount == 0 && recorder.droppedEventCount == 0, "reset clears entries and counters")
         expect(recorder.makeSupportLog().contains("entries=0 capacity=3 dropped=0"), "reset log is empty")
 
+        checkHostEvents()
+
         CompositeBroadLogger(loggers: []).log(.bootstrapRunJoined)
+    }
+
+    /// Declared host codes, counters and flags preserve their meaning in the
+    /// formatted support log.
+    private static func checkHostEvents() {
+        let recorder = BroadSupportLogRecorder(capacity: 8)
+        recorder.log(.host(BroadLogHostEvent(
+            code: "musicfy.job.failed",
+            category: .backend,
+            level: .error,
+            fields: [
+                BroadLogHostField("code", "MODERATION_BLOCKED"),
+                BroadLogHostField("attempt", 2),
+                BroadLogHostField("retry", false)
+            ]
+        )))
+        let log = recorder.makeSupportLog()
+        expect(
+            log.contains("[BACKEND] musicfy.job.failed code=MODERATION_BLOCKED attempt=2 retry=false"),
+            "host event keeps its category, code and typed fields"
+        )
+
+        let normalized = BroadLogHostEvent(
+            code: "job status/changed",
+            fields: [BroadLogHostField("phase name", "READY NOW")]
+        )
+        expect(normalized.code == "job-status-changed", "code punctuation is normalized")
+        expect(normalized.fields[0].name == "phase-name", "field names are normalized")
+        expect(normalized.fields[0].value == "READY-NOW", "symbolic values are normalized")
+
+        let empty = BroadLogHostEvent(code: "")
+        expect(empty.code == "host.event", "an empty code falls back to a stable name")
+        expect(BroadLogHostField("", "value").name == "field", "an empty field name falls back")
+
+        let many = BroadLogHostEvent(
+            code: "probe.fields",
+            fields: (0 ..< 20).map { BroadLogHostField("attempt", $0) }
+        )
+        expect(many.fields.count == BroadLogHostEvent.maximumFieldCount, "field count is capped")
+        expect(many.fields.map(\.value) == (0 ..< 8).map(String.init), "field order and duplicate names are preserved")
+        let longCode: StaticString = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnop"
+        let bounded = BroadLogHostEvent(code: longCode, fields: [BroadLogHostField(longCode, longCode)])
+        expect(bounded.code.count == BroadLogHostEvent.maximumCodeLength, "event codes are bounded")
+        expect(bounded.fields[0].name.count == BroadLogHostEvent.maximumFieldLength, "field names are bounded")
+        expect(bounded.fields[0].value.count == BroadLogHostEvent.maximumFieldLength, "symbolic values are bounded")
+        expect(BroadLogHostField("enabled", true).value == "true", "true flags are formatted")
+        expect(BroadLogHostField("delta", -2).value == "-2", "signed counters are preserved")
+
+        expect(
+            BroadLogEvent.host(BroadLogHostEvent(code: "probe.level", level: .warning)).level == .warning,
+            "level comes from the host event"
+        )
+        expect(
+            BroadLogEvent.host(BroadLogHostEvent(code: "probe.name")).name == "probe.name",
+            "name is the host code"
+        )
     }
 
     private static func entryLines(in log: String) -> [String] {

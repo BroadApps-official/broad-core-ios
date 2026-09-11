@@ -1,6 +1,6 @@
 /// Единственное место, где typed-событие превращается в безопасную строку
 /// `[TAG] event.name key=value`. Все поля берутся только из закрытых enum, Bool
-/// и счётчиков, поэтому строка не может содержать payload, секрет или PII.
+/// и счётчиков, а для host-событий — из заранее объявленных кодов и полей.
 /// `OSLogBroadLogger` и `BroadSupportLogRecorder` используют один и тот же
 /// форматтер, чтобы Console и вложение к письму в поддержку совпадали дословно.
 enum BroadLogEventFormatter {
@@ -33,9 +33,23 @@ enum BroadLogEventFormatter {
              .workBlocked,
              .verificationPassed:
             developmentStatusMessage(for: event)
+        case let .host(hostEvent):
+            hostMessage(for: hostEvent)
         default:
             bootstrapLifecycleMessage(for: event)
         }
+    }
+
+    /// `code name=value name=value`. Codes and fields have already been
+    /// normalized and bounded by ``BroadLogHostEvent``.
+    private static func hostMessage(for event: BroadLogHostEvent) -> String {
+        guard !event.fields.isEmpty else {
+            return event.code
+        }
+        let fields = event.fields
+            .map { "\($0.name)=\($0.value)" }
+            .joined(separator: " ")
+        return "\(event.code) \(fields)"
     }
 
     private static func developmentStatusMessage(for event: BroadLogEvent) -> String {
