@@ -1,14 +1,15 @@
 import Foundation
 import Security
 
-/// Where the account identifier is kept in Keychain.
+/// Where the account identifier is kept in Keychain. The names must stay the same
+/// across app updates: a changed service or account no longer finds the stored item.
 public struct KeychainAccountIdentifierConfiguration: Equatable, Sendable {
     public let service: String
     public let account: String
     /// A missing access group means the app's default Keychain access group.
     public let accessGroup: String?
-    /// Also keep a copy in iCloud Keychain, so a new phone on the same Apple ID
-    /// resolves the same account. `false` keeps the identifier on this device only.
+    /// Also keep a copy in iCloud Keychain, so a new phone on the same Apple Account
+    /// can resolve the same account. `false` never reads or writes the iCloud copy.
     public let synchronizesThroughICloudKeychain: Bool
 
     public init(
@@ -41,14 +42,16 @@ public struct KeychainAccountIdentifierConfiguration: Equatable, Sendable {
 /// Order of resolution:
 /// 1. The host's legacy identifier. An installed app already runs its purchases and
 ///    backend account under it, so on this device it stays the main one.
-/// 2. This device's own item. It survives a reinstall and wins over iCloud Keychain,
-///    where another phone on the same Apple ID may have put a different identifier.
-/// 3. The item from iCloud Keychain. The device has none of its own, so it is a new
-///    phone of an existing user and joins that account.
-/// 4. A new identifier, returned only after it is stored on this device.
+/// 2. This device's own item. It wins over iCloud Keychain, where another phone on
+///    the same Apple Account may have put a different identifier.
+/// 3. The item from iCloud Keychain: the device has none of its own.
+/// 4. A new identifier.
 ///
-/// A copy is written to iCloud Keychain only when none is there yet, so two phones
-/// never take the item over from each other. The identifier is never logged.
+/// Every resolved identifier is stored as this device's item first; otherwise the
+/// result is `.failed` and the caller retries. A read that ends without a definite
+/// answer also fails instead of starting another account. The iCloud copy is only
+/// ever added, never replaced, so phones do not take the item over from each other.
+/// The identifier is never logged.
 public actor KeychainAccountIdentifierStore: AccountIdentifierProviderProtocol {
     private static let maximumIdentifierByteCount = 1024
 
@@ -103,52 +106,122 @@ public actor KeychainAccountIdentifierStore: AccountIdentifierProviderProtocol {
 
 private extension KeychainAccountIdentifierStore {
     func resolveFromStorage() -> AccountIdentifierResolution {
-        let own: String?
-        switch storage.read(synchronizable: false) {
-        case let .value(value):
-            own = Self.normalized(value)
-        case .missing:
-            own = nil
-        case .unavailable:
+        let deviceItem = storage.read(synchronizable: false)
+        if deviceItem == .unavailable {
             // Keychain is locked or unavailable. A new identifier here would start a
             // second account for someone who already has one.
             return .failed(failureError)
         }
+        let hasDeviceItem = deviceItem != .missing
+        let own: String? = if case let .value(value) = deviceItem {
+            Self.normalized(value)
+        } else {
+            nil
+        }
 
         if let legacy = Self.normalized(legacyIdentifier()) {
-            if own != legacy {
-                _ = storage.write(legacy, synchronizable: false)
+            guard own == legacy || storeLegacyOnDevice(legacy, replacing: hasDeviceItem) else {
+                // The migration is not finished; the host keeps its value and retries.
+                return .failed(failureError)
             }
-            shareIfICloudIsEmpty(legacy)
+            addICloudCopy(legacy)
             return .resolved(identifier: legacy, source: .legacy)
         }
 
         if let own {
-            shareIfICloudIsEmpty(own)
+            addICloudCopy(own)
             return .resolved(identifier: own, source: .device)
         }
 
-        if synchronizes,
-           case let .value(value) = storage.read(synchronizable: true),
-           let synced = Self.normalized(value) {
-            _ = storage.write(synced, synchronizable: false)
-            return .resolved(identifier: synced, source: .iCloudKeychain)
+        if let joined = joinICloudCopy(replacing: hasDeviceItem) {
+            return joined
         }
 
-        guard let generated = Self.normalized(makeIdentifier()),
-              storage.write(generated, synchronizable: false)
-        else {
-            // An identifier that is not stored anywhere changes on the next launch.
+        guard let generated = Self.normalized(makeIdentifier()) else {
             return .failed(failureError)
         }
-        shareIfICloudIsEmpty(generated)
-        return .resolved(identifier: generated, source: .generated)
+        let claimed = claimDeviceItem(generated, source: .generated, replacing: hasDeviceItem)
+        guard claimed == .resolved(identifier: generated, source: .generated) else {
+            return claimed
+        }
+        return shareGenerated(generated)
     }
 
-    func shareIfICloudIsEmpty(_ identifier: String) {
-        guard synchronizes, storage.read(synchronizable: true) == .missing else { return }
-        // Best effort: an unsigned build or disabled iCloud Keychain keeps the identifier local.
-        _ = storage.write(identifier, synchronizable: true)
+    /// `nil` means there is no usable iCloud copy and a new identifier may be created.
+    func joinICloudCopy(replacing hasDeviceItem: Bool) -> AccountIdentifierResolution? {
+        guard synchronizes else { return nil }
+        switch storage.read(synchronizable: true) {
+        case let .value(value):
+            guard let synced = Self.normalized(value) else { return nil }
+            return claimDeviceItem(synced, source: .iCloudKeychain, replacing: hasDeviceItem)
+        case .missing, .unreadable:
+            return nil
+        case .unavailable:
+            // The iCloud copy may hold an existing account; do not decide without it.
+            return .failed(failureError)
+        }
+    }
+
+    /// The legacy identifier wins over whatever the device item holds.
+    func storeLegacyOnDevice(_ identifier: String, replacing hasDeviceItem: Bool) -> Bool {
+        if !hasDeviceItem {
+            switch storage.add(identifier, synchronizable: false) {
+            case .added:
+                return true
+            case .failed:
+                return false
+            case .alreadyExists:
+                break
+            }
+        }
+        return storage.replaceDeviceItem(with: identifier)
+    }
+
+    /// Stores a found or new identifier as this device's item. If another writer
+    /// stored one first, that identifier wins, so one launch never sees two.
+    func claimDeviceItem(
+        _ identifier: String,
+        source: AccountIdentifierSource,
+        replacing hasDeviceItem: Bool
+    ) -> AccountIdentifierResolution {
+        if hasDeviceItem {
+            return storage.replaceDeviceItem(with: identifier)
+                ? .resolved(identifier: identifier, source: source)
+                : .failed(failureError)
+        }
+
+        switch storage.add(identifier, synchronizable: false) {
+        case .added:
+            return .resolved(identifier: identifier, source: source)
+        case .alreadyExists:
+            if case let .value(value) = storage.read(synchronizable: false), let stored = Self.normalized(value) {
+                return .resolved(identifier: stored, source: .device)
+            }
+            return .failed(failureError)
+        case .failed:
+            return .failed(failureError)
+        }
+    }
+
+    /// Nothing has used the new identifier yet. If another phone's copy reached
+    /// iCloud Keychain after the read, the device joins that account instead.
+    func shareGenerated(_ generated: String) -> AccountIdentifierResolution {
+        guard synchronizes, storage.add(generated, synchronizable: true) == .alreadyExists,
+              case let .value(value) = storage.read(synchronizable: true),
+              let synced = Self.normalized(value),
+              synced != generated,
+              storage.replaceDeviceItem(with: synced)
+        else {
+            return .resolved(identifier: generated, source: .generated)
+        }
+        return .resolved(identifier: synced, source: .iCloudKeychain)
+    }
+
+    /// Best effort: without iCloud Keychain the identifier stays on this device.
+    /// An existing copy of another phone is kept.
+    func addICloudCopy(_ identifier: String) {
+        guard synchronizes else { return }
+        _ = storage.add(identifier, synchronizable: true)
     }
 
     static func normalized(_ value: String?) -> String? {
@@ -166,13 +239,24 @@ private extension KeychainAccountIdentifierStore {
 
 enum AccountIdentifierItemRead: Equatable, Sendable {
     case value(String)
+    /// The item exists, but its data is not text.
+    case unreadable
     case missing
+    /// No definite answer: the device is locked or Keychain is not accessible.
     case unavailable
+}
+
+enum AccountIdentifierItemAdd: Equatable, Sendable {
+    case added
+    case alreadyExists
+    case failed
 }
 
 protocol AccountIdentifierItemStorage: Sendable {
     func read(synchronizable: Bool) -> AccountIdentifierItemRead
-    func write(_ identifier: String, synchronizable: Bool) -> Bool
+    /// Adds the item only when there is none; an existing item is never replaced.
+    func add(_ identifier: String, synchronizable: Bool) -> AccountIdentifierItemAdd
+    func replaceDeviceItem(with identifier: String) -> Bool
 }
 
 struct SecurityAccountIdentifierItemStorage: AccountIdentifierItemStorage {
@@ -187,7 +271,7 @@ struct SecurityAccountIdentifierItemStorage: AccountIdentifierItemStorage {
         switch SecItemCopyMatching(query as CFDictionary, &item) {
         case errSecSuccess:
             guard let data = item as? Data, let value = String(data: data, encoding: .utf8) else {
-                return .missing
+                return .unreadable
             }
             return .value(value)
         case errSecItemNotFound:
@@ -197,24 +281,35 @@ struct SecurityAccountIdentifierItemStorage: AccountIdentifierItemStorage {
         }
     }
 
-    func write(_ identifier: String, synchronizable: Bool) -> Bool {
-        let query = baseQuery(synchronizable: synchronizable)
-        let data = Data(identifier.utf8)
-
-        let status = SecItemUpdate(query as CFDictionary, [kSecValueData as String: data] as CFDictionary)
-        if status == errSecSuccess {
-            return true
-        }
-        guard status == errSecItemNotFound else {
-            return false
-        }
-
-        var item = query
-        item[kSecValueData as String] = data
+    func add(_ identifier: String, synchronizable: Bool) -> AccountIdentifierItemAdd {
+        var item = baseQuery(synchronizable: synchronizable)
+        item[kSecValueData as String] = Data(identifier.utf8)
         // Readable by a background launch after the first unlock. A `ThisDeviceOnly`
         // class would keep the item out of iCloud Keychain.
         item[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
-        return SecItemAdd(item as CFDictionary, nil) == errSecSuccess
+
+        switch SecItemAdd(item as CFDictionary, nil) {
+        case errSecSuccess:
+            return .added
+        case errSecDuplicateItem:
+            return .alreadyExists
+        default:
+            return .failed
+        }
+    }
+
+    func replaceDeviceItem(with identifier: String) -> Bool {
+        let query = baseQuery(synchronizable: false)
+        let update = [kSecValueData as String: Data(identifier.utf8)]
+
+        switch SecItemUpdate(query as CFDictionary, update as CFDictionary) {
+        case errSecSuccess:
+            return true
+        case errSecItemNotFound:
+            return add(identifier, synchronizable: false) == .added
+        default:
+            return false
+        }
     }
 
     private func baseQuery(synchronizable: Bool) -> [String: Any] {

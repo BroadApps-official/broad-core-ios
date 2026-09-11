@@ -93,7 +93,7 @@ struct CoreSandboxView: View {
                     Button("Resolve") {
                         resolveAccountIdentifier()
                     }
-                    Text("Unsigned builds keep it on this device: iCloud Keychain needs a signed app.")
+                    Text("An unsigned build has no Keychain entitlement, so resolution fails. Use a signed build.")
                 }
 
                 Section("ATT boundary") {

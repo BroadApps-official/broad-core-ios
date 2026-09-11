@@ -35,8 +35,8 @@ retry/timeout, networking classification, persistence boundary и ATT adapter.
 - даёт `LoadableState`, typed `AppError` и безопасную network classification;
 - пишет typed privacy-safe events через `BroadLoggerProtocol`;
 - изолирует `UserDefaults` и ATT в infrastructure adapters;
-- хранит стабильный идентификатор аккаунта в Keychain и переносит его на новый
-  телефон через «Связку ключей iCloud»;
+- хранит стабильный идентификатор аккаунта в Keychain с копией в «Связке ключей
+  iCloud»;
 - регистрирует foundation dependencies через `BroadCoreAssembly`.
 
 ## Runtime-карта
@@ -56,7 +56,7 @@ Core отвечает за **механику**, а не за продуктов
 | Ошибка сети | typed classification и retryability | текст, экран и момент Retry |
 | Логи | typed allow-list без raw payload | subsystem и destinations |
 | ATT | system adapter и use case | вызвать только после видимого первого onboarding-слайда |
-| Новый телефон | идентификатор аккаунта из Keychain и «Связки ключей iCloud», его источник | подтягивать ли серверные данные аккаунта |
+| Новый телефон | идентификатор аккаунта из Keychain и «Связки ключей iCloud», его источник | подтверждение аккаунта и доступ к его данным на сервере |
 
 Нельзя помещать в bootstrap ATT, Rate Us, Usedesk, purchase/restore, RU checkout
 или бесконечное ожидание внешнего SDK. Background failure может дать
@@ -188,10 +188,10 @@ logger.log(.host(BroadLogHostEvent(
 ## Account identifier
 
 `KeychainAccountIdentifierStore` хранит идентификатор аккаунта — customer user
-ID для Adapty и backend — в Keychain и «Связке ключей iCloud». Переустановка и
-новый телефон на том же Apple ID возвращают тот же аккаунт: подписку, в том числе
-оплаченную картой или СБП, и баланс токенов. Restore Purchases вернул бы только
-покупки Apple.
+ID для Adapty и backend — в Keychain с копией в «Связке ключей iCloud». Он
+помогает переустановке и новому телефону на том же Apple Account найти прежний
+аккаунт; права, баланс и подписку, в том числе оплаченную картой или СБП,
+возвращает сервер этого аккаунта. Сам ID оплату не подтверждает.
 
 ```swift
 let accountIdentifiers = KeychainAccountIdentifierStore(
@@ -205,12 +205,13 @@ if case let .resolved(identifier, source) = await accountIdentifiers.resolve() {
 }
 ```
 
-`legacyIdentifier` — идентификатор, под которым приложение уже работает: он
-остаётся главным на этом устройстве и расходится на новые телефоны. Своя запись
-устройства важнее iCloud, в iCloud запись кладётся только если её там нет, а
-`.failed` приходит вместо нового аккаунта, когда Keychain недоступен. Общий
-Apple ID означает общий аккаунт — порядок, источник `AccountIdentifierSource` и
-ограничения описаны в [гайде](Documentation/BroadCore.md#account-identifier).
+`legacyIdentifier` — ID, под которым приложение уже работает: на этом устройстве
+он остаётся главным. Любой `.resolved` уже сохранён на устройстве; недоступный
+Keychain, неотвеченное чтение iCloud-копии или неудачная запись дают `.failed`
+вместо второго аккаунта. Копия в iCloud только добавляется и чужую запись не
+заменяет. Сохранение после удаления приложения и доставка через iCloud — не
+гарантия: порядок, `AccountIdentifierSource` и границы описаны в
+[гайде](Documentation/BroadCore.md#account-identifier).
 
 ## Cache contract
 
