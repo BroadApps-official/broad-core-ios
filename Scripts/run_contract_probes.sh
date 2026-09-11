@@ -8,6 +8,7 @@ probe_binary="$probe_directory/BroadCorePolicyProbe"
 storage_probe_binary="$probe_directory/BroadCoreStorageProbe"
 server_clock_probe_binary="$probe_directory/BroadCoreServerClockProbe"
 logging_probe_binary="$probe_directory/BroadCoreLoggingProbe"
+account_identifier_probe_binary="$probe_directory/BroadCoreAccountIdentifierProbe"
 
 mkdir -p "$probe_directory"
 xcrun swiftc \
@@ -48,4 +49,12 @@ xcrun swiftc \
 "$logging_probe_binary"
 bash "$module_root/Scripts/check_host_log_api.sh"
 
-echo "BroadCore policy, network, file-storage, server-clock and logging contract probes passed."
+xcrun swiftc \
+    "$module_root/Sources/BroadCore/Domain/Errors/AppError.swift" \
+    "$module_root/Sources/BroadCore/Domain/Identity/AccountIdentifier.swift" \
+    "$module_root/Sources/BroadCore/Infrastructure/Keychain/KeychainAccountIdentifierStore.swift" \
+    "$module_root/Scripts/ContractProbes/BroadCoreAccountIdentifierProbe.swift" \
+    -o "$account_identifier_probe_binary"
+"$account_identifier_probe_binary"
+
+echo "BroadCore policy, network, file-storage, server-clock, logging and account-identifier contract probes passed."
