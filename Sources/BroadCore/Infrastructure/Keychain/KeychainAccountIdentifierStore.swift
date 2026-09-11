@@ -140,11 +140,7 @@ private extension KeychainAccountIdentifierStore {
         guard let generated = Self.normalized(makeIdentifier()) else {
             return .failed(failureError)
         }
-        let claimed = claimDeviceItem(generated, source: .generated, replacing: hasDeviceItem)
-        guard claimed == .resolved(identifier: generated, source: .generated) else {
-            return claimed
-        }
-        return shareGenerated(generated)
+        return claimGeneratedIdentifier(generated, replacing: hasDeviceItem)
     }
 
     /// `nil` means there is no usable iCloud copy and a new identifier may be created.
@@ -203,18 +199,27 @@ private extension KeychainAccountIdentifierStore {
         }
     }
 
-    /// Nothing has used the new identifier yet. If another phone's copy reached
-    /// iCloud Keychain after the read, the device joins that account instead.
-    func shareGenerated(_ generated: String) -> AccountIdentifierResolution {
-        guard synchronizes, storage.add(generated, synchronizable: true) == .alreadyExists,
-              case let .value(value) = storage.read(synchronizable: true),
-              let synced = Self.normalized(value),
-              synced != generated,
-              storage.replaceDeviceItem(with: synced)
-        else {
-            return .resolved(identifier: generated, source: .generated)
+    /// Settle the iCloud choice before publishing any new device item. Another
+    /// store can observe the device item immediately, so it must already be final.
+    func claimGeneratedIdentifier(_ generated: String, replacing hasDeviceItem: Bool) -> AccountIdentifierResolution {
+        guard synchronizes else {
+            return claimDeviceItem(generated, source: .generated, replacing: hasDeviceItem)
         }
-        return .resolved(identifier: synced, source: .iCloudKeychain)
+        switch storage.add(generated, synchronizable: true) {
+        case .added:
+            return claimDeviceItem(generated, source: .generated, replacing: hasDeviceItem)
+        case .alreadyExists:
+            guard case let .value(value) = storage.read(synchronizable: true),
+                  let synced = Self.normalized(value)
+            else {
+                // Leave the device item untouched so a retry can still recover
+                // the existing account instead of preferring a generated ID.
+                return .failed(failureError)
+            }
+            return claimDeviceItem(synced, source: .iCloudKeychain, replacing: hasDeviceItem)
+        case .failed:
+            return .failed(failureError)
+        }
     }
 
     /// Best effort: without iCloud Keychain the identifier stays on this device.

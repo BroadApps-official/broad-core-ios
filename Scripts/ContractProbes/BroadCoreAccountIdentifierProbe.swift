@@ -9,10 +9,13 @@ private final class MemoryKeychain: AccountIdentifierItemStorage, @unchecked Sen
     private var synced: String?
     private var localUnavailable = false
     private var syncedUnavailable = false
+    private var syncedAddFails = false
+    private var failReadAfterDuplicate = false
     private var localWritesFail = false
     private var syncedAccessCount = 0
     private var beforeLocalAdd: (() -> String?)?
     private var beforeSyncedAdd: (() -> String?)?
+    private var afterSyncedAdd: (() -> Void)?
 
     init(local: String? = nil, synced: String? = nil) {
         self.local = local
@@ -37,6 +40,33 @@ private final class MemoryKeychain: AccountIdentifierItemStorage, @unchecked Sen
 
     func makeSyncedUnavailable() {
         locked { syncedUnavailable = true }
+    }
+
+    func allowSyncedAccess() {
+        locked {
+            syncedUnavailable = false
+            syncedAddFails = false
+            failReadAfterDuplicate = false
+        }
+    }
+
+    func failNextConflictRead() {
+        locked { failReadAfterDuplicate = true }
+    }
+
+    func failSyncedAdd() {
+        locked { syncedAddFails = true }
+    }
+
+    func pauseAfterSyncedAdd(arrived: DispatchSemaphore, resume: DispatchSemaphore) {
+        locked {
+            afterSyncedAdd = {
+                arrived.signal()
+                guard resume.wait(timeout: .now() + 10) == .success else {
+                    fatalError("The second store did not finish while the first was paused")
+                }
+            }
+        }
     }
 
     func setLocalWritesFail(_ fail: Bool) {
@@ -70,15 +100,20 @@ private final class MemoryKeychain: AccountIdentifierItemStorage, @unchecked Sen
     }
 
     func add(_ identifier: String, synchronizable: Bool) -> AccountIdentifierItemAdd {
-        locked {
+        let outcome: AccountIdentifierItemAdd = locked {
             if synchronizable {
                 syncedAccessCount += 1
                 if let arrived = beforeSyncedAdd?() {
                     synced = arrived
                     beforeSyncedAdd = nil
                 }
-                guard !syncedUnavailable else { return .failed }
-                guard synced == nil else { return .alreadyExists }
+                guard !syncedUnavailable, !syncedAddFails else { return .failed }
+                guard synced == nil else {
+                    if failReadAfterDuplicate {
+                        syncedUnavailable = true
+                    }
+                    return .alreadyExists
+                }
                 synced = identifier
                 return .added
             }
@@ -91,6 +126,13 @@ private final class MemoryKeychain: AccountIdentifierItemStorage, @unchecked Sen
             local = identifier
             return .added
         }
+        let hook: (() -> Void)? = locked {
+            guard synchronizable else { return nil }
+            defer { afterSyncedAdd = nil }
+            return afterSyncedAdd
+        }
+        hook?()
+        return outcome
     }
 
     func replaceDeviceItem(with identifier: String) -> Bool {
@@ -133,6 +175,9 @@ enum BroadCoreAccountIdentifierProbe {
         await checkAnotherPhoneArrivingDuringGenerationIsJoined()
         await checkAnotherPhoneArrivingWhileSharingIsNotReplaced()
         await checkAnotherDeviceWriterWins()
+        await checkConflictFailuresRemainRetryable()
+        await checkFailedCloudAddDoesNotPublishLocalIdentifier()
+        await checkTwoStoresNeverObserveAProvisionalIdentifier()
         await checkDisabledSyncNeverTouchesICloud()
         await checkConcurrentCallsResolveOneIdentifier()
         print(
@@ -324,6 +369,69 @@ enum BroadCoreAccountIdentifierProbe {
         }
         guard !keychain.touchedICloud else {
             fatalError("With sync disabled iCloud Keychain must not be read or written")
+        }
+    }
+
+    private static func checkConflictFailuresRemainRetryable() async {
+        for failRead in [true, false] {
+            let keychain = MemoryKeychain()
+            keychain.interleaveOtherPhone("old-account")
+            if failRead {
+                keychain.failNextConflictRead()
+            } else {
+                keychain.setLocalWritesFail(true)
+            }
+            let store = makeStore(keychain, makeIdentifier: { "provisional" })
+            guard await store.resolve() == .failed(failure), keychain.localValue == nil else {
+                fatalError("An unresolved conflict must fail without publishing a new local account")
+            }
+            keychain.allowSyncedAccess()
+            keychain.setLocalWritesFail(false)
+            guard await store.resolve() == .resolved(identifier: "old-account", source: .iCloudKeychain),
+                  keychain.localValue == "old-account"
+            else {
+                fatalError("The same store must recover the old account when storage recovers")
+            }
+        }
+    }
+
+    private static func checkFailedCloudAddDoesNotPublishLocalIdentifier() async {
+        let keychain = MemoryKeychain()
+        keychain.failSyncedAdd()
+        let store = makeStore(keychain)
+        guard await store.resolve() == .failed(failure), keychain.localValue == nil else {
+            fatalError("An unsuccessful initial cloud claim must not publish a local account")
+        }
+        keychain.allowSyncedAccess()
+        guard await store.resolve() == .resolved(identifier: "generated", source: .generated) else {
+            fatalError("A failed initial cloud claim must remain retryable")
+        }
+    }
+
+    private static func checkTwoStoresNeverObserveAProvisionalIdentifier() async {
+        let keychain = MemoryKeychain()
+        keychain.interleaveOtherPhone("old-account")
+        let arrived = DispatchSemaphore(value: 0)
+        let resume = DispatchSemaphore(value: 0)
+        keychain.pauseAfterSyncedAdd(arrived: arrived, resume: resume)
+        let first = makeStore(keychain, makeIdentifier: { "provisional" })
+        let second = makeStore(keychain, makeIdentifier: { "other-candidate" })
+        let pending = Task.detached { await first.resolve() }
+        let didArrive = await withCheckedContinuation { continuation in
+            DispatchQueue.global().async {
+                continuation.resume(returning: arrived.wait(timeout: .now() + 10))
+            }
+        }
+        guard didArrive == .success else { fatalError("The first store did not reach its cloud claim") }
+        let secondResult = await second.resolve()
+        resume.signal()
+        let firstResult = await pending.value
+        let cachedSecond = await second.resolve()
+        guard firstResult.identifier == "old-account",
+              secondResult.identifier == "old-account",
+              cachedSecond.identifier == keychain.localValue
+        else {
+            fatalError("Both stores and the local item must keep the same final account")
         }
     }
 
