@@ -53,6 +53,7 @@
 | Case | `case degraded(AppError)` |
 | Case | `case denied` |
 | Case | `case designMismatch` |
+| Case | `case device` |
 | Case | `case deviceContextNotRussian` |
 | Case | `case empty` |
 | Case | `case encoding` |
@@ -69,9 +70,11 @@
 | Case | `case fresh(CacheEnvelope<Value>)` |
 | Case | `case full` |
 | Case | `case functional` |
+| Case | `case generated` |
 | Case | `case history` |
 | Case | `case host(BroadLogHostEvent)` |
 | Case | `case hostDisabled` |
+| Case | `case iCloudKeychain` |
 | Case | `case idle` |
 | Case | `case info` |
 | Case | `case initialPaywall` |
@@ -79,6 +82,7 @@
 | Case | `case invalidTimestamp` |
 | Case | `case invalidType(serializedValue: Data)` |
 | Case | `case launch` |
+| Case | `case legacy` |
 | Case | `case legacyUnqualified` |
 | Case | `case loaded(Value)` |
 | Case | `case loading(previousValue: Value?)` |
@@ -112,6 +116,7 @@
 | Case | `case remoteFlagDisabled` |
 | Case | `case remoteFlagInvalid` |
 | Case | `case remove` |
+| Case | `case resolved(identifier: String, source: AccountIdentifierSource)` |
 | Case | `case restricted` |
 | Case | `case ruBilling` |
 | Case | `case ruBillingAvailabilityEvaluated(reason: BroadLogRUBillingAvailabilityReason, methodCount: Int)` |
@@ -162,11 +167,14 @@
 | Class | `actor AppBootstrapCoordinator` |
 | Class | `actor DebugKeychainCleaner` |
 | Class | `actor FileSystemKeyValueStore` |
+| Class | `actor KeychainAccountIdentifierStore` |
 | Class | `actor ServerSynchronizedClock` |
 | Class | `actor UserDefaultsKeyValueStore` |
 | Class | `actor VersionedJSONCacheRepository` |
 | Class | `final class BroadCoreAssembly` |
 | Class | `final class BroadSupportLogRecorder` |
+| Enumeration | `enum AccountIdentifierResolution` |
+| Enumeration | `enum AccountIdentifierSource` |
 | Enumeration | `enum AppBootstrapState` |
 | Enumeration | `enum BootstrapCriticality` |
 | Enumeration | `enum BootstrapStepCompletion` |
@@ -202,6 +210,7 @@
 | Enumeration | `enum NetworkFailureKind` |
 | Enumeration | `enum ServerTimeReading` |
 | Enumeration | `enum TrackingAuthorizationStatus` |
+| Initializer | `convenience init(configuration: KeychainAccountIdentifierConfiguration, failureError: AppError, legacyIdentifier: @escaping () -> String? = { nil })` |
 | Initializer | `init()` |
 | Initializer | `init(_ name: StaticString, _ value: Bool)` |
 | Initializer | `init(_ name: StaticString, _ value: Int)` |
@@ -225,6 +234,7 @@
 | Initializer | `init(repository: any TrackingAuthorizationRepositoryProtocol)` |
 | Initializer | `init(scopes: [DebugKeychainScope], failureError: AppError)` |
 | Initializer | `init(service: String, accessGroup: String? = nil)` |
+| Initializer | `init(service: String, account: String = "account-identifier", accessGroup: String? = nil, synchronizesThroughICloudKeychain: Bool = true)` |
 | Initializer | `init(steps: [BootstrapStep], errorMessages: BootstrapErrorMessages = .englishDefault, logger: any BroadLoggerProtocol = NoOpBroadLogger())` |
 | Initializer | `init(store: any KeyValueStoreProtocol, arguments: [String] = ProcessInfo.processInfo.arguments)` |
 | Initializer | `init(store: any KeyValueStoreProtocol, storageKey: String = ServerSynchronizedClock.defaultStorageKey, now: @escaping () -> Date = { Date() })` |
@@ -273,6 +283,8 @@
 | Instance Method | `func reset()` |
 | Instance Method | `func reset() async` |
 | Instance Method | `func reset(_ flags: [DebugFlag]) async` |
+| Instance Method | `func resolve() -> AccountIdentifierResolution` |
+| Instance Method | `func resolve() async -> AccountIdentifierResolution` |
 | Instance Method | `func set(_ flag: DebugFlag, _ isOn: Bool) async` |
 | Instance Method | `func states() async -> AsyncStream<AppBootstrapState>` |
 | Instance Method | `func write(_ data: Data, forKey key: String) async throws` |
@@ -280,6 +292,7 @@
 | Instance Method | `func write(_ data: Data, forKey key: String, ifMatching snapshot: KeyValueStoreEntry) throws -> Bool` |
 | Instance Method | `func write<Value>(_ value: Value, for key: CacheKey<Value>) async throws where Value : Decodable, Value : Encodable, Value : Sendable` |
 | Instance Property | `let accessGroup: String?` |
+| Instance Property | `let account: String` |
 | Instance Property | `let capacity: Int` |
 | Instance Property | `let category: BroadLogCategory` |
 | Instance Property | `let code: String` |
@@ -306,6 +319,7 @@
 | Instance Property | `let schemaIdentifier: String` |
 | Instance Property | `let schemaMismatchAction: InvalidCacheEntryAction` |
 | Instance Property | `let service: String` |
+| Instance Property | `let synchronizesThroughICloudKeychain: Bool` |
 | Instance Property | `let timeToLive: TimeInterval` |
 | Instance Property | `let timeout: String` |
 | Instance Property | `let timeoutPolicy: TimeoutPolicy` |
@@ -322,6 +336,7 @@
 | Instance Property | `var entryCount: Int { get }` |
 | Instance Property | `var error: AppError? { get }` |
 | Instance Property | `var hasContent: Bool { get }` |
+| Instance Property | `var identifier: String? { get }` |
 | Instance Property | `var isLoading: Bool { get }` |
 | Instance Property | `var isSynchronized: Bool { get }` |
 | Instance Property | `var level: BroadLogLevel { get }` |
@@ -329,6 +344,7 @@
 | Instance Property | `var state: AppBootstrapState { get async }` |
 | Instance Property | `var state: AppBootstrapState { get }` |
 | Instance Property | `var value: Value? { get }` |
+| Protocol | `protocol AccountIdentifierProviderProtocol : Sendable` |
 | Protocol | `protocol BroadLoggerProtocol : Sendable` |
 | Protocol | `protocol CacheRepositoryProtocol : Sendable` |
 | Protocol | `protocol KeyValueStoreProtocol : Sendable` |
@@ -351,6 +367,7 @@
 | Structure | `struct DebugFlag` |
 | Structure | `struct DebugFlagStore` |
 | Structure | `struct DebugKeychainScope` |
+| Structure | `struct KeychainAccountIdentifierConfiguration` |
 | Structure | `struct NoOpBroadLogger` |
 | Structure | `struct OSLogBroadLogger` |
 | Structure | `struct RequestTrackingAuthorizationUseCase` |

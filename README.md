@@ -12,7 +12,7 @@
   <img alt="iOS 17+" src="https://img.shields.io/badge/iOS-17%2B-111827?logo=apple&amp;logoColor=white">
   <img alt="Swift 5" src="https://img.shields.io/badge/Swift-language%20mode%205-F05138?logo=swift&amp;logoColor=white">
   <img alt="SPM ready" src="https://img.shields.io/badge/SPM-ready-3B82F6">
-  <img alt="Release 2.0.0" src="https://img.shields.io/badge/release-2.0.0-10B981">
+  <img alt="Release 2.1.0" src="https://img.shields.io/badge/release-2.1.0-10B981">
 </p>
 
 Foundation‑модуль BroadApps для bootstrap, cache, typed states/errors, logging,
@@ -35,6 +35,8 @@ retry/timeout, networking classification, persistence boundary и ATT adapter.
 - даёт `LoadableState`, typed `AppError` и безопасную network classification;
 - пишет typed privacy-safe events через `BroadLoggerProtocol`;
 - изолирует `UserDefaults` и ATT в infrastructure adapters;
+- хранит стабильный идентификатор аккаунта в Keychain с копией в «Связке ключей
+  iCloud»;
 - регистрирует foundation dependencies через `BroadCoreAssembly`.
 
 ## Runtime-карта
@@ -54,6 +56,7 @@ Core отвечает за **механику**, а не за продуктов
 | Ошибка сети | typed classification и retryability | текст, экран и момент Retry |
 | Логи | typed allow-list без raw payload | subsystem и destinations |
 | ATT | system adapter и use case | вызвать только после видимого первого onboarding-слайда |
+| Новый телефон | идентификатор аккаунта из Keychain и «Связки ключей iCloud», его источник | подтверждение аккаунта и доступ к его данным на сервере |
 
 Нельзя помещать в bootstrap ATT, Rate Us, Usedesk, purchase/restore, RU checkout
 или бесконечное ожидание внешнего SDK. Background failure может дать
@@ -98,7 +101,7 @@ umbrella package нет.
 dependencies: [
     .package(
         url: "https://github.com/BroadApps-official/broad-core-ios.git",
-        from: "2.0.0"
+        from: "2.1.0"
     )
 ]
 ```
@@ -181,6 +184,34 @@ logger.log(.host(BroadLogHostEvent(
 
 Для миграции на 2.0.0 обновите exhaustive switches по `BroadLogEvent`:
 новый case `.host` передаёт событие приложения. Остальные события не меняются.
+
+## Account identifier
+
+`KeychainAccountIdentifierStore` хранит идентификатор аккаунта — customer user
+ID для Adapty и backend — в Keychain с копией в «Связке ключей iCloud». Он
+помогает переустановке и новому телефону на том же Apple Account найти прежний
+аккаунт; права, баланс и подписку, в том числе оплаченную картой или СБП,
+возвращает сервер этого аккаунта. Сам ID оплату не подтверждает.
+
+```swift
+let accountIdentifiers = KeychainAccountIdentifierStore(
+    configuration: KeychainAccountIdentifierConfiguration(service: "\(bundleIdentifier).account"),
+    failureError: accountUnavailableError,
+    legacyIdentifier: { UserDefaults.standard.string(forKey: "user_id") }
+)
+
+if case let .resolved(identifier, source) = await accountIdentifiers.resolve() {
+    // identifier → Adapty и backend
+}
+```
+
+`legacyIdentifier` — ID, под которым приложение уже работает: на этом устройстве
+он остаётся главным. Любой `.resolved` уже сохранён на устройстве; недоступный
+Keychain, неотвеченное чтение iCloud-копии или неудачная запись дают `.failed`
+вместо второго аккаунта. Копия в iCloud только добавляется и чужую запись не
+заменяет. Сохранение после удаления приложения и доставка через iCloud — не
+гарантия: порядок, `AccountIdentifierSource` и границы описаны в
+[гайде](Documentation/BroadCore.md#account-identifier).
 
 ## Cache contract
 

@@ -49,3 +49,11 @@ Foundation contracts for reliable BroadApps iPhone application startup and state
 - ``ServerTimeProviderProtocol``
 - ``ServerSynchronizedClock``
 - ``HTTPServerDate``
+
+### Account identity
+
+- ``AccountIdentifierProviderProtocol``
+- ``AccountIdentifierResolution``
+- ``AccountIdentifierSource``
+- ``KeychainAccountIdentifierStore``
+- ``KeychainAccountIdentifierConfiguration``

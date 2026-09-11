@@ -7,6 +7,7 @@ struct CoreSandboxView: View {
     @State private var isRunning = false
     /// Redraws the support log after a host event is written into the recorder.
     @State private var loggedHostEvents = 0
+    @State private var accountIdentifier = "not resolved"
 
     private let cachePolicy = CachePolicy(timeToLive: 3600)
     private let retryPolicy = RetryPolicy.exponential(
@@ -16,13 +17,24 @@ struct CoreSandboxView: View {
     )
     private let supportLogRecorder = BroadSupportLogRecorder()
     private let logger: CompositeBroadLogger
+    private let accountIdentifierStore: KeychainAccountIdentifierStore
 
     init() {
+        let bundleIdentifier = Bundle.main.bundleIdentifier ?? "com.broadapps.core-sandbox"
         logger = CompositeBroadLogger(
             loggers: [
-                OSLogBroadLogger(subsystem: Bundle.main.bundleIdentifier ?? "com.broadapps.core-sandbox"),
+                OSLogBroadLogger(subsystem: bundleIdentifier),
                 supportLogRecorder
             ]
+        )
+        accountIdentifierStore = KeychainAccountIdentifierStore(
+            configuration: KeychainAccountIdentifierConfiguration(service: "\(bundleIdentifier).account"),
+            failureError: AppError(
+                kind: .unavailable,
+                userMessage: "Keychain is not available yet.",
+                diagnosticCode: "sandbox.account-identifier.unavailable",
+                isRetryable: true
+            )
         )
     }
 
@@ -76,11 +88,30 @@ struct CoreSandboxView: View {
                         .id(loggedHostEvents)
                 }
 
+                Section("Account identifier") {
+                    LabeledContent("Resolution", value: accountIdentifier)
+                    Button("Resolve") {
+                        resolveAccountIdentifier()
+                    }
+                    Text("An unsigned build has no Keychain entitlement, so resolution fails. Use a signed build.")
+                }
+
                 Section("ATT boundary") {
                     Text("Core exposes the adapter. A visible onboarding flow decides when to request permission.")
                 }
             }
             .navigationTitle("BroadCore")
+        }
+    }
+
+    private func resolveAccountIdentifier() {
+        Task {
+            switch await accountIdentifierStore.resolve() {
+            case let .resolved(identifier, source):
+                accountIdentifier = "\(source.rawValue) · \(identifier.prefix(8))…"
+            case let .failed(error):
+                accountIdentifier = error.diagnosticCode
+            }
         }
     }
 
