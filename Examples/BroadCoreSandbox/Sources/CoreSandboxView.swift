@@ -65,7 +65,8 @@ struct CoreSandboxView: View {
                             level: .error,
                             fields: [
                                 BroadLogHostField("code", "MODERATION_BLOCKED"),
-                                BroadLogHostField("attempt", 2)
+                                BroadLogHostField("attempt", 2),
+                                BroadLogHostField("retry", false)
                             ]
                         )))
                         loggedHostEvents += 1

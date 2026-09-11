@@ -203,12 +203,12 @@
 | Enumeration | `enum ServerTimeReading` |
 | Enumeration | `enum TrackingAuthorizationStatus` |
 | Initializer | `init()` |
-| Initializer | `init(_ name: String, _ value: Bool)` |
-| Initializer | `init(_ name: String, _ value: Int)` |
-| Initializer | `init(_ name: String, _ value: String)` |
+| Initializer | `init(_ name: StaticString, _ value: Bool)` |
+| Initializer | `init(_ name: StaticString, _ value: Int)` |
+| Initializer | `init(_ name: StaticString, _ value: StaticString)` |
 | Initializer | `init(bootstrapSteps: [BootstrapStep] = [], bootstrapErrorMessages: BootstrapErrorMessages = .englishDefault, cacheRepository: (any CacheRepositoryProtocol)? = nil, stateStore: (any KeyValueStoreProtocol)? = nil, logger: any BroadLoggerProtocol = NoOpBroadLogger(), trackingAuthorizationRepository: any TrackingAuthorizationRepositoryProtocol = SystemTrackingAuthorizationAdapter())` |
 | Initializer | `init(capacity: Int = BroadSupportLogRecorder.defaultCapacity)` |
-| Initializer | `init(code: String, category: BroadLogCategory = .backend, level: BroadLogLevel = .info, fields: [BroadLogHostField] = [])` |
+| Initializer | `init(code: StaticString, category: BroadLogCategory = .backend, level: BroadLogLevel = .info, fields: [BroadLogHostField] = [])` |
 | Initializer | `init(delays: [Duration])` |
 | Initializer | `init(directoryURL: URL, namespace: String, maximumDataSize: Int = FileSystemKeyValueStore.defaultMaximumDataSize)` |
 | Initializer | `init(from decoder: any Decoder) throws` |

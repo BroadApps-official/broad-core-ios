@@ -7,12 +7,9 @@
 /// that talks to its own backend contains only platform steps, and the reason a
 /// generation or a sync failed is missing from the very letter that reports it.
 ///
-/// It is deliberately not a free-text channel. A field carries a code, an enum
-/// case or a count — never a URL, a receipt, a token, an identifier or a raw
-/// error message. Values are sanitized on the way in: everything outside
-/// `A-Za-z0-9._:-` becomes `-`, and both halves are capped, so a careless call
-/// site cannot smuggle payment data or a stack trace into a file the user
-/// e-mails to support.
+/// Codes and field names are declared as `StaticString`; symbolic field values
+/// use the same type, while counters and flags accept `Int` and `Bool`.
+/// The formatter normalizes punctuation and bounds the size of each entry.
 public struct BroadLogHostEvent: Equatable, Sendable {
     /// Maximum length of a code; longer values are truncated.
     public static let maximumCodeLength = 64
@@ -34,13 +31,13 @@ public struct BroadLogHostEvent: Equatable, Sendable {
     ///   - fields: ordered `name=value` pairs; see the type documentation for
     ///     what may go in them.
     public init(
-        code: String,
+        code: StaticString,
         category: BroadLogCategory = .backend,
         level: BroadLogLevel = .info,
         fields: [BroadLogHostField] = []
     ) {
         let sanitizedCode = BroadLogHostEvent.sanitize(
-            code,
+            code.description,
             limit: BroadLogHostEvent.maximumCodeLength
         )
         self.code = sanitizedCode.isEmpty ? "host.event" : sanitizedCode
@@ -50,39 +47,43 @@ public struct BroadLogHostEvent: Equatable, Sendable {
     }
 
     static func sanitize(_ value: String, limit: Int) -> String {
-        let allowed = value.map { character -> Character in
+        let allowed = value.prefix(max(0, limit)).map { character -> Character in
             let isAllowed = character.isLetter && character.isASCII
                 || character.isNumber && character.isASCII
                 || character == "." || character == "_" || character == ":" || character == "-"
             return isAllowed ? character : "-"
         }
-        return String(allowed.prefix(max(0, limit)))
+        return String(allowed)
     }
 }
 
-/// One `name=value` pair of a ``BroadLogHostEvent``. Both halves are sanitized
-/// the same way the code is.
+/// One `name=value` pair of a ``BroadLogHostEvent``. Names and symbolic values
+/// are declared constants; numeric counters and boolean flags have typed overloads.
 public struct BroadLogHostField: Equatable, Sendable {
     public let name: String
     public let value: String
 
-    public init(_ name: String, _ value: String) {
+    public init(_ name: StaticString, _ value: StaticString) {
+        self.init(name, formattedValue: value.description)
+    }
+
+    public init(_ name: StaticString, _ value: Int) {
+        self.init(name, formattedValue: String(value))
+    }
+
+    public init(_ name: StaticString, _ value: Bool) {
+        self.init(name, formattedValue: value ? "true" : "false")
+    }
+
+    private init(_ name: StaticString, formattedValue: String) {
         let sanitizedName = BroadLogHostEvent.sanitize(
-            name,
+            name.description,
             limit: BroadLogHostEvent.maximumFieldLength
         )
         self.name = sanitizedName.isEmpty ? "field" : sanitizedName
-        self.value = BroadLogHostEvent.sanitize(
-            value,
+        value = BroadLogHostEvent.sanitize(
+            formattedValue,
             limit: BroadLogHostEvent.maximumFieldLength
         )
-    }
-
-    public init(_ name: String, _ value: Int) {
-        self.init(name, String(value))
-    }
-
-    public init(_ name: String, _ value: Bool) {
-        self.init(name, value ? "true" : "false")
     }
 }
