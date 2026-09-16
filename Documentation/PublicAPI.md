@@ -210,7 +210,7 @@
 | Enumeration | `enum NetworkFailureKind` |
 | Enumeration | `enum ServerTimeReading` |
 | Enumeration | `enum TrackingAuthorizationStatus` |
-| Initializer | `convenience init(configuration: KeychainAccountIdentifierConfiguration, failureError: AppError, legacyIdentifier: @escaping () -> String? = { nil })` |
+| Initializer | `convenience init(configuration: KeychainAccountIdentifierConfiguration, failureError: AppError, legacyIdentifier: @escaping @Sendable () -> String? = { nil })` |
 | Initializer | `init()` |
 | Initializer | `init(_ name: StaticString, _ value: Bool)` |
 | Initializer | `init(_ name: StaticString, _ value: Int)` |
@@ -229,8 +229,9 @@
 | Initializer | `init(limit: Duration)` |
 | Initializer | `init(loggers: [any BroadLoggerProtocol])` |
 | Initializer | `init(name: String, schemaIdentifier: String, version: Int, policy: CachePolicy)` |
-| Initializer | `init(now: @escaping () -> Date)` |
+| Initializer | `init(now: @escaping @Sendable () -> Date)` |
 | Initializer | `init(offline: String, timedOut: String, cancelled: String, other: String)` |
+| Initializer | `init(on flags: [DebugFlag])` |
 | Initializer | `init(rawValue: String)` |
 | Initializer | `init(repository: any TrackingAuthorizationRepositoryProtocol)` |
 | Initializer | `init(scopes: [DebugKeychainScope], failureError: AppError)` |
@@ -238,7 +239,7 @@
 | Initializer | `init(service: String, account: String = "account-identifier", accessGroup: String? = nil, synchronizesThroughICloudKeychain: Bool = true)` |
 | Initializer | `init(steps: [BootstrapStep], errorMessages: BootstrapErrorMessages = .englishDefault, logger: any BroadLoggerProtocol = NoOpBroadLogger())` |
 | Initializer | `init(store: any KeyValueStoreProtocol, arguments: [String] = ProcessInfo.processInfo.arguments)` |
-| Initializer | `init(store: any KeyValueStoreProtocol, storageKey: String = ServerSynchronizedClock.defaultStorageKey, now: @escaping () -> Date = { Date() })` |
+| Initializer | `init(store: any KeyValueStoreProtocol, storageKey: String = ServerSynchronizedClock.defaultStorageKey, now: @escaping @Sendable () -> Date = { Date() })` |
 | Initializer | `init(subsystem: StaticString)` |
 | Initializer | `init(subsystem: String)` |
 | Initializer | `init(suiteName: String? = nil, namespace: String, maximumDataSize: Int = UserDefaultsKeyValueStore.defaultMaximumDataSize)` |
@@ -387,7 +388,7 @@
 | Structure | `struct SystemTrackingAuthorizationAdapter` |
 | Structure | `struct TimeoutPolicy` |
 | Structure | `struct TransportErrorMessages` |
-| Type Alias | `typealias Operation = () async throws -> BootstrapStepCompletion` |
+| Type Alias | `typealias Operation = @Sendable () async throws -> BootstrapStepCompletion` |
 | Type Method | `static func classify(_ error: any Error) -> NetworkFailureKind` |
 | Type Method | `static func date(from response: HTTPURLResponse) -> Date?` |
 | Type Method | `static func date(fromHeader header: String) -> Date?` |

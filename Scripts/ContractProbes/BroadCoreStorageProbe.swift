@@ -88,6 +88,20 @@ enum BroadCoreStorageProbe {
 
         try expect(!DebugFlagSnapshot.empty.isOn(persisted), "empty snapshot uses the flag default")
         try expect(DebugFlagSnapshot.empty.isOn(defaultedOn), "empty snapshot keeps a true default")
+
+        let unreadForced = DebugFlag(key: "unread-forced", launchArgument: "-debug-forced")
+        try expect(
+            snapshot.isOn(unreadForced),
+            "a launch argument forces a flag the snapshot was not asked for, as the store does"
+        )
+        try expect(
+            DebugFlagSnapshot(on: [persisted]).isOn(persisted),
+            "a hand-built snapshot answers the flags it was given"
+        )
+        try expect(
+            !DebugFlagSnapshot(on: [persisted]).isOn(forced),
+            "a hand-built snapshot does not consult launch arguments"
+        )
     }
 
     private static func expect(_ condition: @autoclosure () -> Bool, _ contract: String) throws {

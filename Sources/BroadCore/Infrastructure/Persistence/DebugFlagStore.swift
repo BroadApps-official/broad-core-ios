@@ -105,30 +105,50 @@ public struct DebugFlagStore: Sendable {
         for flag in flags {
             values[flag.key] = await isOn(flag)
         }
-        return DebugFlagSnapshot(values: values)
+        return DebugFlagSnapshot(values: values, arguments: arguments)
     }
 }
 
 /// Debug switches read once, answering without `await`.
 ///
-/// Built by ``DebugFlagStore/snapshot(of:)``. A flag the snapshot was not asked
-/// for answers with its own `defaultValue`, so a forgotten flag degrades to the
-/// declared default instead of silently reading `false`.
+/// Built by ``DebugFlagStore/snapshot(of:)``, and answering exactly as the store
+/// would: a launch argument still forces its flag on, and a flag the snapshot was
+/// not asked for falls back to its own `defaultValue`. Two answers for the same
+/// flag in the same run would be a trap, not a convenience.
 public struct DebugFlagSnapshot: Equatable, Sendable {
     private let values: [String: Bool]
+    private let arguments: [String]
 
-    init(values: [String: Bool]) {
+    init(values: [String: Bool], arguments: [String]) {
         self.values = values
+        self.arguments = arguments
+    }
+
+    /// A snapshot with the listed flags on and every other flag at its own
+    /// `defaultValue`.
+    ///
+    /// For a SwiftUI preview or any other place that has to stand in for a store
+    /// it cannot read. Launch arguments are not consulted.
+    public init(on flags: [DebugFlag]) {
+        values = flags.reduce(into: [:]) { values, flag in
+            values[flag.key] = true
+        }
+        arguments = []
     }
 
     /// An empty snapshot: every flag answers its own `defaultValue`.
     ///
     /// Useful in a Release build, where no store is constructed at all, and as a
     /// starting value before the real snapshot has been read.
-    public static let empty = DebugFlagSnapshot(values: [:])
+    public static let empty = DebugFlagSnapshot(values: [:], arguments: [])
 
-    /// Whether the flag was on when the snapshot was taken.
+    /// Whether the flag is on: a launch argument the snapshot was taken under
+    /// forces `true`; otherwise the value read at that moment, or the flag's
+    /// `defaultValue` when it was not among the flags read.
     public func isOn(_ flag: DebugFlag) -> Bool {
-        values[flag.key] ?? flag.defaultValue
+        if let launchArgument = flag.launchArgument, arguments.contains(launchArgument) {
+            return true
+        }
+        return values[flag.key] ?? flag.defaultValue
     }
 }

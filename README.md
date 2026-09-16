@@ -285,17 +285,21 @@ root собирает граф зависимостей одним синхро�
 сборки:
 
 ```swift
+let offlineBackend = DebugFlag(key: "offline-backend", launchArgument: "-debug-offline-backend")
+
 #if DEBUG
-    let flags = await debugFlagStore.snapshot(of: [.forcePremium, .offlineBackend])
+    let flags = await debugFlagStore.snapshot(of: [offlineBackend])
 #else
     let flags = DebugFlagSnapshot.empty
 #endif
 
-let backendURL = flags.isOn(.offlineBackend) ? unreachableURL : productionURL
+let backendURL = flags.isOn(offlineBackend) ? unreachableURL : productionURL
 ```
 
-Флаг, о котором снимок не спрашивали, отвечает своим `defaultValue`. Снимок не
-следит за последующими записями: после `set(_:_:)` возьмите новый.
+Снимок отвечает ровно так же, как ответил бы стор: launch-аргумент по-прежнему
+включает свой флаг, а флаг, о котором снимок не спрашивали, отвечает своим
+`defaultValue`. Снимок не следит за последующими записями: после `set(_:_:)`
+возьмите новый.
 
 ## Public entry points
 
