@@ -254,6 +254,49 @@ Core предоставляет adapter/use case, но момент запрос
 Разрешённый contract: запрос после фактического появления первого onboarding
 слайда. Bootstrap и loader ATT не вызывают.
 
+## Transport ошибки
+
+Классификация и решение о повторе принадлежат платформе, текст для пользователя —
+приложению:
+
+```swift
+let error = AppError.transportFailure(
+    thrownError,
+    messages: AppTexts.transportMessages, // по умолчанию TransportErrorMessages.englishDefault
+    diagnosticPrefix: "app.backend"
+)
+```
+
+`NetworkFailureClassifier` определяет вид отказа, `AppError.transportFailure`
+переводит его в `kind`, `isRetryable` и код диагностики вида
+`app.backend.offline`. Отменённый запрос сам по себе не повторяется: уйти решил
+вызывающий, ему и решать, спрашивать ли снова. Сырой текст ошибки и URL в
+результат не попадают.
+
+Без этого каждое приложение писало свой `switch` по `URLError.Code` и теряло
+часть кодов: потерянный DNS-запрос и выключенный роуминг оказывались «неизвестной
+ошибкой», которую приложение считало повторяемой.
+
+## Debug-флаги в синхронной композиции
+
+`DebugFlagStore` асинхронный, потому что асинхронно его хранилище. Composition
+root собирает граф зависимостей одним синхронным проходом, а debug-переключатель
+как раз и решает, какую зависимость собирать. Снимок читается один раз, до
+сборки:
+
+```swift
+#if DEBUG
+    let flags = await debugFlagStore.snapshot(of: [.forcePremium, .offlineBackend])
+#else
+    let flags = DebugFlagSnapshot.empty
+#endif
+
+let backendURL = flags.isOn(.offlineBackend) ? unreachableURL : productionURL
+```
+
+Флаг, о котором снимок не спрашивали, отвечает своим `defaultValue`. Снимок не
+следит за последующими записями: после `set(_:_:)` возьмите новый.
+
 ## Public entry points
 
 - `AppBootstrapCoordinator`, `BootstrapStep`, `BootstrapErrorMessages`;
@@ -261,7 +304,9 @@ Core предоставляет adapter/use case, но момент запрос
 - `CachePolicy`, `CacheEnvelope`, `CacheReadResult`, cache repositories;
 - `UserDefaultsKeyValueStore` для небольшого state и
   `FileSystemKeyValueStore` для больших cache payload;
-- `LoadableState`, `AppError`, `NetworkFailureClassifier`;
+- `LoadableState`, `AppError`, `NetworkFailureClassifier`,
+  `TransportErrorMessages` и `AppError.transportFailure(...)`;
+- `DebugFlag`, `DebugFlagStore` и синхронный `DebugFlagSnapshot`;
 - `BroadLoggerProtocol`, typed `BroadLogEvent`, OSLog/no-op adapters,
   `BroadSupportLogRecorder` и `CompositeBroadLogger`;
 - `TrackingAuthorizationUseCaseProtocol` и system adapter;
@@ -276,8 +321,8 @@ bash Scripts/run_contract_probes.sh
 ```
 
 Probe компилирует настоящие production types и проверяет retry, timeout, cache,
-safe network classification и file-backed read/write/CAS без XCTest/Swift
-Testing.
+safe network classification, перевод отказа транспорта в `AppError`, снимок
+debug-флагов и file-backed read/write/CAS без XCTest/Swift Testing.
 
 ## Sandbox
 

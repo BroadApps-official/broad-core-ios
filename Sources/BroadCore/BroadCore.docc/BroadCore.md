@@ -24,6 +24,7 @@ Foundation contracts for reliable BroadApps iPhone application startup and state
 
 - ``AppError``
 - ``NetworkFailureClassifier``
+- ``TransportErrorMessages``
 - ``BroadLoggerProtocol``
 - ``BroadLogEvent``
 - ``BroadLogHostEvent``
@@ -42,6 +43,7 @@ Foundation contracts for reliable BroadApps iPhone application startup and state
 
 - ``DebugFlag``
 - ``DebugFlagStore``
+- ``DebugFlagSnapshot``
 
 ### Server time
 

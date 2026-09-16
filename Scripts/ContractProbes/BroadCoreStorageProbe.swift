@@ -48,6 +48,46 @@ enum BroadCoreStorageProbe {
         try expect(removed, "conditional removal accepts the current snapshot")
         let removedSnapshot = try await store.read("catalog")
         try expect(removedSnapshot == .missing, "removed value is absent")
+
+        try await probeDebugFlagSnapshot(in: directoryURL)
+    }
+
+    private static func probeDebugFlagSnapshot(in directoryURL: URL) async throws {
+        let flagStore = DebugFlagStore(
+            store: FileSystemKeyValueStore(
+                directoryURL: directoryURL,
+                namespace: "debug-flags",
+                maximumDataSize: 16
+            ),
+            arguments: ["-debug-forced"]
+        )
+
+        let persisted = DebugFlag(key: "persisted")
+        let forced = DebugFlag(key: "forced", launchArgument: "-debug-forced")
+        let defaultedOn = DebugFlag(key: "defaulted", defaultValue: true)
+        let unread = DebugFlag(key: "unread", defaultValue: true)
+
+        await flagStore.set(persisted, true)
+
+        let snapshot = await flagStore.snapshot(of: [persisted, forced, defaultedOn])
+        try expect(snapshot.isOn(persisted), "snapshot reads a written flag")
+        try expect(snapshot.isOn(forced), "snapshot honours a launch argument")
+        try expect(snapshot.isOn(defaultedOn), "snapshot falls back to the declared default")
+        try expect(
+            snapshot.isOn(unread),
+            "a flag the snapshot was not asked for answers with its own default"
+        )
+
+        await flagStore.set(persisted, false)
+        try expect(
+            snapshot.isOn(persisted),
+            "a snapshot does not follow later writes"
+        )
+        let rereadSnapshot = await flagStore.snapshot(of: [persisted])
+        try expect(!rereadSnapshot.isOn(persisted), "a new snapshot sees the write")
+
+        try expect(!DebugFlagSnapshot.empty.isOn(persisted), "empty snapshot uses the flag default")
+        try expect(DebugFlagSnapshot.empty.isOn(defaultedOn), "empty snapshot keeps a true default")
     }
 
     private static func expect(_ condition: @autoclosure () -> Bool, _ contract: String) throws {

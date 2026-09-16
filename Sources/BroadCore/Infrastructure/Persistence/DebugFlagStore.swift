@@ -87,4 +87,48 @@ public struct DebugFlagStore: Sendable {
             try? await store.remove(flag.key)
         }
     }
+
+    /// Reads every flag once and hands back a value that answers synchronously.
+    ///
+    /// A composition root builds its dependency graph in one synchronous pass,
+    /// and a debug switch usually decides which dependency is built at all. The
+    /// store itself cannot answer there — its backing key-value store is async —
+    /// so a host reads the switches once, before composing, and branches on the
+    /// snapshot. Without this, every application keeps a second, synchronous
+    /// store of its own next to this one.
+    ///
+    /// The snapshot does not follow later writes: take a new one after ``set(_:_:)``
+    /// if the same run has to see the change.
+    public func snapshot(of flags: [DebugFlag]) async -> DebugFlagSnapshot {
+        var values: [String: Bool] = [:]
+        values.reserveCapacity(flags.count)
+        for flag in flags {
+            values[flag.key] = await isOn(flag)
+        }
+        return DebugFlagSnapshot(values: values)
+    }
+}
+
+/// Debug switches read once, answering without `await`.
+///
+/// Built by ``DebugFlagStore/snapshot(of:)``. A flag the snapshot was not asked
+/// for answers with its own `defaultValue`, so a forgotten flag degrades to the
+/// declared default instead of silently reading `false`.
+public struct DebugFlagSnapshot: Equatable, Sendable {
+    private let values: [String: Bool]
+
+    init(values: [String: Bool]) {
+        self.values = values
+    }
+
+    /// An empty snapshot: every flag answers its own `defaultValue`.
+    ///
+    /// Useful in a Release build, where no store is constructed at all, and as a
+    /// starting value before the real snapshot has been read.
+    public static let empty = DebugFlagSnapshot(values: [:])
+
+    /// Whether the flag was on when the snapshot was taken.
+    public func isOn(_ flag: DebugFlag) -> Bool {
+        values[flag.key] ?? flag.defaultValue
+    }
 }

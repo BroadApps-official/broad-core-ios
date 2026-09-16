@@ -37,6 +37,56 @@ enum BroadCorePolicyProbe {
             NetworkFailureClassifier.classify(CancellationError()) == .cancelled,
             "cancellation classification"
         )
+
+        expect(
+            NetworkFailureClassifier.classify(URLError(.dnsLookupFailed)) == .offline,
+            "a lost DNS lookup reads as offline"
+        )
+        expect(
+            NetworkFailureClassifier.classify(URLError(.internationalRoamingOff)) == .offline,
+            "roaming switched off reads as offline"
+        )
+
+        let offline = AppError.transportFailure(
+            URLError(.notConnectedToInternet),
+            diagnosticPrefix: "probe.backend"
+        )
+        expect(offline.kind == .offline, "offline failure keeps the offline kind")
+        expect(offline.isRetryable, "offline failure is worth retrying")
+        expect(offline.diagnosticCode == "probe.backend.offline", "diagnostic code carries the prefix")
+        expect(
+            offline.userMessage == TransportErrorMessages.englishDefault.offline,
+            "default copy is used when the host supplies none"
+        )
+
+        let timedOut = AppError.transportFailure(
+            URLError(.timedOut),
+            diagnosticPrefix: "probe.backend"
+        )
+        expect(timedOut.kind == .timeout, "timeout failure keeps the timeout kind")
+        expect(timedOut.isRetryable, "timeout failure is worth retrying")
+
+        let cancelled = AppError.transportFailure(
+            CancellationError(),
+            diagnosticPrefix: "probe.backend"
+        )
+        expect(!cancelled.isRetryable, "a cancelled request is not retried on its own")
+        expect(cancelled.diagnosticCode == "probe.backend.cancelled", "cancellation has its own code")
+
+        let hostCopy = TransportErrorMessages(
+            offline: "Нет соединения",
+            timedOut: "Слишком долго",
+            cancelled: "Отменено",
+            other: "Что-то пошло не так"
+        )
+        expect(
+            AppError.transportFailure(
+                URLError(.badServerResponse),
+                messages: hostCopy,
+                diagnosticPrefix: "probe.backend"
+            ).userMessage == hostCopy.other,
+            "host copy replaces the default"
+        )
     }
 
     private static func expect(_ condition: @autoclosure () -> Bool, _ contract: String) {

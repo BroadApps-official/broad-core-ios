@@ -16,6 +16,8 @@ xcrun swiftc \
     "$module_root/Sources/BroadCore/Domain/Policies/TimeoutPolicy.swift" \
     "$module_root/Sources/BroadCore/Domain/Cache/CachePolicy.swift" \
     "$module_root/Sources/BroadCore/Infrastructure/Networking/NetworkFailureClassifier.swift" \
+    "$module_root/Sources/BroadCore/Domain/Errors/AppError.swift" \
+    "$module_root/Sources/BroadCore/Domain/Errors/TransportErrorMessages.swift" \
     "$module_root/Scripts/ContractProbes/BroadCorePolicyProbe.swift" \
     -o "$probe_binary"
 "$probe_binary"
@@ -23,6 +25,7 @@ xcrun swiftc \
 xcrun swiftc \
     "$module_root/Sources/BroadCore/Application/Storage/KeyValueStoreProtocol.swift" \
     "$module_root/Sources/BroadCore/Infrastructure/Persistence/FileSystemKeyValueStore.swift" \
+    "$module_root/Sources/BroadCore/Infrastructure/Persistence/DebugFlagStore.swift" \
     "$module_root/Scripts/ContractProbes/BroadCoreStorageProbe.swift" \
     -o "$storage_probe_binary"
 "$storage_probe_binary"

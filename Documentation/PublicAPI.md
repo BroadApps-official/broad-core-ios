@@ -230,6 +230,7 @@
 | Initializer | `init(loggers: [any BroadLoggerProtocol])` |
 | Initializer | `init(name: String, schemaIdentifier: String, version: Int, policy: CachePolicy)` |
 | Initializer | `init(now: @escaping () -> Date)` |
+| Initializer | `init(offline: String, timedOut: String, cancelled: String, other: String)` |
 | Initializer | `init(rawValue: String)` |
 | Initializer | `init(repository: any TrackingAuthorizationRepositoryProtocol)` |
 | Initializer | `init(scopes: [DebugKeychainScope], failureError: AppError)` |
@@ -259,12 +260,14 @@
 | Instance Method | `func clear() -> DebugKeychainCleanupOutcome` |
 | Instance Method | `func fail(with error: AppError, preservingValue: Bool = true) -> LoadableState<Value>` |
 | Instance Method | `func insertIfMissing<Value>(_ value: Value, for key: CacheKey<Value>) async throws -> Bool where Value : Decodable, Value : Encodable, Value : Equatable, Value : Sendable` |
+| Instance Method | `func isOn(_ flag: DebugFlag) -> Bool` |
 | Instance Method | `func isOn(_ flag: DebugFlag) async -> Bool` |
 | Instance Method | `func isSynchronized() async -> Bool` |
 | Instance Method | `func log(_ event: BroadLogEvent)` |
 | Instance Method | `func log(_: BroadLogEvent)` |
 | Instance Method | `func makeSupportLog() -> String` |
 | Instance Method | `func makeSupportLogData() -> Data` |
+| Instance Method | `func message(for kind: NetworkFailureKind) -> String` |
 | Instance Method | `func now() -> Date` |
 | Instance Method | `func read(_ key: String) -> KeyValueStoreEntry` |
 | Instance Method | `func read(_ key: String) async throws -> KeyValueStoreEntry` |
@@ -286,6 +289,7 @@
 | Instance Method | `func resolve() -> AccountIdentifierResolution` |
 | Instance Method | `func resolve() async -> AccountIdentifierResolution` |
 | Instance Method | `func set(_ flag: DebugFlag, _ isOn: Bool) async` |
+| Instance Method | `func snapshot(of flags: [DebugFlag]) async -> DebugFlagSnapshot` |
 | Instance Method | `func states() async -> AsyncStream<AppBootstrapState>` |
 | Instance Method | `func write(_ data: Data, forKey key: String) async throws` |
 | Instance Method | `func write(_ data: Data, forKey key: String) throws` |
@@ -293,6 +297,7 @@
 | Instance Method | `func write<Value>(_ value: Value, for key: CacheKey<Value>) async throws where Value : Decodable, Value : Encodable, Value : Sendable` |
 | Instance Property | `let accessGroup: String?` |
 | Instance Property | `let account: String` |
+| Instance Property | `let cancelled: String` |
 | Instance Property | `let capacity: Int` |
 | Instance Property | `let category: BroadLogCategory` |
 | Instance Property | `let code: String` |
@@ -312,6 +317,8 @@
 | Instance Property | `let level: BroadLogLevel` |
 | Instance Property | `let limit: Duration` |
 | Instance Property | `let name: String` |
+| Instance Property | `let offline: String` |
+| Instance Property | `let other: String` |
 | Instance Property | `let policy: CachePolicy` |
 | Instance Property | `let rawValue: String` |
 | Instance Property | `let retryPolicy: RetryPolicy` |
@@ -321,6 +328,7 @@
 | Instance Property | `let service: String` |
 | Instance Property | `let synchronizesThroughICloudKeychain: Bool` |
 | Instance Property | `let timeToLive: TimeInterval` |
+| Instance Property | `let timedOut: String` |
 | Instance Property | `let timeout: String` |
 | Instance Property | `let timeoutPolicy: TimeoutPolicy` |
 | Instance Property | `let unknown: String` |
@@ -329,15 +337,18 @@
 | Instance Property | `let value: Value` |
 | Instance Property | `let version: Int` |
 | Instance Property | `let versionMismatchAction: InvalidCacheEntryAction` |
+| Instance Property | `var appErrorKind: AppError.Kind { get }` |
 | Instance Property | `var canRequestAuthorization: Bool { get }` |
 | Instance Property | `var category: BroadLogCategory { get }` |
 | Instance Property | `var date: Date { get }` |
+| Instance Property | `var diagnosticSuffix: String { get }` |
 | Instance Property | `var droppedEventCount: Int { get }` |
 | Instance Property | `var entryCount: Int { get }` |
 | Instance Property | `var error: AppError? { get }` |
 | Instance Property | `var hasContent: Bool { get }` |
 | Instance Property | `var identifier: String? { get }` |
 | Instance Property | `var isLoading: Bool { get }` |
+| Instance Property | `var isRetryable: Bool { get }` |
 | Instance Property | `var isSynchronized: Bool { get }` |
 | Instance Property | `var level: BroadLogLevel { get }` |
 | Instance Property | `var name: String { get }` |
@@ -365,6 +376,7 @@
 | Structure | `struct CachePolicy` |
 | Structure | `struct CompositeBroadLogger` |
 | Structure | `struct DebugFlag` |
+| Structure | `struct DebugFlagSnapshot` |
 | Structure | `struct DebugFlagStore` |
 | Structure | `struct DebugKeychainScope` |
 | Structure | `struct KeychainAccountIdentifierConfiguration` |
@@ -374,6 +386,7 @@
 | Structure | `struct RetryPolicy` |
 | Structure | `struct SystemTrackingAuthorizationAdapter` |
 | Structure | `struct TimeoutPolicy` |
+| Structure | `struct TransportErrorMessages` |
 | Type Alias | `typealias Operation = () async throws -> BootstrapStepCompletion` |
 | Type Method | `static func classify(_ error: any Error) -> NetworkFailureKind` |
 | Type Method | `static func date(from response: HTTPURLResponse) -> Date?` |
@@ -381,11 +394,15 @@
 | Type Method | `static func exponential(retryCount: Int, initialDelay: TimeInterval, multiplier: Double = 2, maximumDelay: TimeInterval) -> RetryPolicy` |
 | Type Method | `static func fixed(retryCount: Int, delay: TimeInterval) -> RetryPolicy` |
 | Type Method | `static func seconds(_ value: TimeInterval) -> TimeoutPolicy` |
+| Type Method | `static func transportFailure(_ error: any Error, messages: TransportErrorMessages = .englishDefault, diagnosticPrefix: String) -> AppError` |
+| Type Method | `static func transportFailure(_ kind: NetworkFailureKind, messages: TransportErrorMessages = .englishDefault, diagnosticPrefix: String) -> AppError` |
 | Type Property | `static let defaultCapacity: Int` |
 | Type Property | `static let defaultMaximumDataSize: Int` |
 | Type Property | `static let defaultMaximumEncodedSize: Int` |
 | Type Property | `static let defaultStorageKey: String` |
+| Type Property | `static let empty: DebugFlagSnapshot` |
 | Type Property | `static let englishDefault: BootstrapErrorMessages` |
+| Type Property | `static let englishDefault: TransportErrorMessages` |
 | Type Property | `static let maximumCodeLength: Int` |
 | Type Property | `static let maximumFieldCount: Int` |
 | Type Property | `static let maximumFieldLength: Int` |
