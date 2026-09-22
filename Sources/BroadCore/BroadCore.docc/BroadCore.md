@@ -57,3 +57,7 @@ Foundation contracts for reliable BroadApps iPhone application startup and state
 - ``AccountIdentifierSource``
 - ``KeychainAccountIdentifierStore``
 - ``KeychainAccountIdentifierConfiguration``
+
+## Optional provider logging
+
+Provider-specific diagnostics use ``BroadLogHostEvent`` and ``BroadLogHostField``. Billing implementations and their event vocabularies live in optional provider packages.

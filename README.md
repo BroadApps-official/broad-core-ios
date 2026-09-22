@@ -12,7 +12,7 @@
   <img alt="iOS 17+" src="https://img.shields.io/badge/iOS-17%2B-111827?logo=apple&amp;logoColor=white">
   <img alt="Swift 5" src="https://img.shields.io/badge/Swift-language%20mode%205-F05138?logo=swift&amp;logoColor=white">
   <img alt="SPM ready" src="https://img.shields.io/badge/SPM-ready-3B82F6">
-  <img alt="Release 2.1.0" src="https://img.shields.io/badge/release-2.1.0-10B981">
+  <img alt="Release 3.0.0" src="https://img.shields.io/badge/release-3.0.0-10B981">
 </p>
 
 Foundation‑модуль BroadApps для bootstrap, cache, typed states/errors, logging,
@@ -27,6 +27,15 @@ retry/timeout, networking classification, persistence boundary и ATT adapter.
 **Быстрый маршрут:** [установка](#installation) · [bootstrap](#minimal-bootstrap) ·
 [cache](#cache-contract) · [runtime-карта](#runtime-карта) ·
 [ATT](#att-boundary) · [проверка](#проверка)
+
+## Migration to 3.0
+
+RU-specific logging types and fixture scenarios moved to the optional
+[BroadRUBilling](https://github.com/BroadApps-official/broad-ru-billing-ios) package.
+BroadCore no longer contains an RU category, logger or payment-specific event.
+Provider diagnostics use the existing typed `BroadLogHostEvent` transport, keeping
+static field values and bounded output. Remove the old cases from exhaustive
+`BroadLogEvent`/`BroadLogCategory` switches; provider events arrive as `.host`.
 
 ## Что делает модуль
 
@@ -101,7 +110,7 @@ umbrella package нет.
 dependencies: [
     .package(
         url: "https://github.com/BroadApps-official/broad-core-ios.git",
-        from: "2.1.0"
+        from: "3.0.0"
     )
 ]
 ```
