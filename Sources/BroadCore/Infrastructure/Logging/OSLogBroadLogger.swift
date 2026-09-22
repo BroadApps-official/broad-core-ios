@@ -7,7 +7,6 @@ public struct OSLogBroadLogger: BroadLoggerProtocol {
     private let monetizationLogger: Logger
     private let paywallLogger: Logger
     private let purchaseLogger: Logger
-    private let ruBillingLogger: Logger
     private let experimentsLogger: Logger
     private let inputLogger: Logger
     private let backendLogger: Logger
@@ -36,7 +35,6 @@ public struct OSLogBroadLogger: BroadLoggerProtocol {
         monetizationLogger = Logger(subsystem: subsystem, category: BroadLogCategory.monetization.rawValue)
         paywallLogger = Logger(subsystem: subsystem, category: BroadLogCategory.paywall.rawValue)
         purchaseLogger = Logger(subsystem: subsystem, category: BroadLogCategory.purchase.rawValue)
-        ruBillingLogger = Logger(subsystem: subsystem, category: BroadLogCategory.ruBilling.rawValue)
         experimentsLogger = Logger(subsystem: subsystem, category: BroadLogCategory.experiments.rawValue)
         inputLogger = Logger(subsystem: subsystem, category: BroadLogCategory.input.rawValue)
         backendLogger = Logger(subsystem: subsystem, category: BroadLogCategory.backend.rawValue)
@@ -99,8 +97,6 @@ private extension OSLogBroadLogger {
             paywallLogger
         case .purchase:
             purchaseLogger
-        case .ruBilling:
-            ruBillingLogger
         case .experiments:
             experimentsLogger
         default:

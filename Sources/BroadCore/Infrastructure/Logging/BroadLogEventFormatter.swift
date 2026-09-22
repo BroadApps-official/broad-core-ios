@@ -22,8 +22,6 @@ enum BroadLogEventFormatter {
             cacheMessage(for: event)
         case .remoteFeatureFixtureEvaluated, .remoteFeatureFixtureResolved:
             remoteFeatureFixtureMessage(for: event)
-        case let .ruBillingAvailabilityEvaluated(reason, methodCount):
-            "\(event.name) reason=\(reason.rawValue) method_count=\(max(0, methodCount))"
         case .projectInputsRead,
              .backendMappingProgress,
              .flowAdvanced,

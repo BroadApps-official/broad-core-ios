@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0
+
+### Breaking
+
+- RU billing logging and RU-only fixture cases move to BroadRUBilling. Base applications no longer carry these symbols or a dedicated OSLog category. Provider diagnostics use typed host events. Update exhaustive log switches.
+
 Все заметные изменения BroadCore фиксируются здесь с объяснением: что изменилось и почему.
 
 ## 2.1.0

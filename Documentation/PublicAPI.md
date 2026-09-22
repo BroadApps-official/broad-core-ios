@@ -9,7 +9,6 @@
 | Case | `case analytics` |
 | Case | `case analyticsEventsRecorded(count: Int)` |
 | Case | `case authorized` |
-| Case | `case available` |
 | Case | `case backend` |
 | Case | `case backendContractMissing` |
 | Case | `case backendMappingProgress(mapped: Int, total: Int)` |
@@ -36,7 +35,6 @@
 | Case | `case cacheOperationFailed(operation: BroadLogCacheOperation, failure: BroadLogCacheFailure)` |
 | Case | `case cacheReadCompleted(BroadLogCacheReadResult)` |
 | Case | `case cancelled` |
-| Case | `case catalogUnavailable` |
 | Case | `case cleanup` |
 | Case | `case completed` |
 | Case | `case completed(clearedServiceCount: Int, alreadyEmptyServiceCount: Int)` |
@@ -46,15 +44,12 @@
 | Case | `case critical` |
 | Case | `case data(Data)` |
 | Case | `case debug` |
-| Case | `case debugForcedDisabled` |
-| Case | `case debugForcedEnabled` |
 | Case | `case decoding` |
 | Case | `case degraded` |
 | Case | `case degraded(AppError)` |
 | Case | `case denied` |
 | Case | `case designMismatch` |
 | Case | `case device` |
-| Case | `case deviceContextNotRussian` |
 | Case | `case empty` |
 | Case | `case encoding` |
 | Case | `case encodingFailed` |
@@ -73,7 +68,6 @@
 | Case | `case generated` |
 | Case | `case history` |
 | Case | `case host(BroadLogHostEvent)` |
-| Case | `case hostDisabled` |
 | Case | `case iCloudKeychain` |
 | Case | `case idle` |
 | Case | `case info` |
@@ -87,7 +81,6 @@
 | Case | `case loaded(Value)` |
 | Case | `case loading(previousValue: Value?)` |
 | Case | `case main` |
-| Case | `case methodsUnavailable` |
 | Case | `case missing` |
 | Case | `case missing(CacheMissReason)` |
 | Case | `case monetization` |
@@ -103,8 +96,6 @@
 | Case | `case platformCache` |
 | Case | `case presented` |
 | Case | `case preserve` |
-| Case | `case productNotEligible` |
-| Case | `case productNotMatched` |
 | Case | `case projectInputsRead(kaiten: Bool, design: Bool, reference: Bool, backend: Bool)` |
 | Case | `case providerCacheFallbackPossible` |
 | Case | `case purchase` |
@@ -112,18 +103,9 @@
 | Case | `case ready` |
 | Case | `case remoteFeatureFixtureEvaluated(scenario: String, state: String, requestedPlacement: String?, resolvedPlacement: String?, variation: String?, provenance: String?)` |
 | Case | `case remoteFeatureFixtureResolved(scenario: BroadLogRemoteFeatureFixtureScenario, resolution: BroadLogRemoteFeatureResolution, requestedPlacement: BroadLogPlacement?, resolvedPlacement: BroadLogPlacement?, hasVariation: Bool, provenance: BroadLogRemoteConfigurationProvenance?)` |
-| Case | `case remoteFlagAbsent` |
-| Case | `case remoteFlagDisabled` |
-| Case | `case remoteFlagInvalid` |
 | Case | `case remove` |
 | Case | `case resolved(identifier: String, source: AccountIdentifierSource)` |
 | Case | `case restricted` |
-| Case | `case ruBilling` |
-| Case | `case ruBillingAvailabilityEvaluated(reason: BroadLogRUBillingAvailabilityReason, methodCount: Int)` |
-| Case | `case ruPayAdaptyFallbackRejected` |
-| Case | `case ruPayPlatformCache` |
-| Case | `case ruPayProviderDisabled` |
-| Case | `case ruPayProviderEnabled` |
 | Case | `case schemaMismatch` |
 | Case | `case schemaMismatch(expected: String, actual: String?)` |
 | Case | `case server` |
@@ -151,7 +133,6 @@
 | Case | `case unauthorized` |
 | Case | `case unavailable` |
 | Case | `case unknown` |
-| Case | `case unqualifiedRemoteConfiguration` |
 | Case | `case unverified(Date)` |
 | Case | `case userInterface` |
 | Case | `case valueTooLarge` |
@@ -191,7 +172,6 @@
 | Enumeration | `enum BroadLogFlowStage` |
 | Enumeration | `enum BroadLogLevel` |
 | Enumeration | `enum BroadLogPlacement` |
-| Enumeration | `enum BroadLogRUBillingAvailabilityReason` |
 | Enumeration | `enum BroadLogRemoteConfigurationProvenance` |
 | Enumeration | `enum BroadLogRemoteFeatureFixtureScenario` |
 | Enumeration | `enum BroadLogRemoteFeatureResolution` |

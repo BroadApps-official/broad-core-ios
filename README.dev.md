@@ -53,3 +53,7 @@ Release notes отвечают: **Что изменилось и почему?**
 4. Обновите Core range в consumers.
 5. Соберите exact combination в integration repository.
 6. После PASS обновите compatibility catalog и public docs.
+
+## Что изменилось и почему — 3.0
+
+RU-specific log cases now belong to the optional provider; BroadCore keeps only its generic typed transport. See README migration.
